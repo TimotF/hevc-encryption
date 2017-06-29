@@ -622,10 +622,16 @@ int set_el_parameter(HEVCContext *s) {
     return ret;
 }
 
+static void printBitContext(GetBitContext *gb){
+    int index;
+    for(index = 0; index<(gb->index); index++){
+        printf("%02x ",gb->buffer[index]);
+    }
+}
 
 static int hls_slice_header(HEVCContext *s)
 {
-    //printf("hls_slice_header\n");
+    printf("hls_slice_header\n");
     GetBitContext *gb = &s->HEVClc->gb;
     SliceHeader *sh   = &s->sh;
 //#if PARALLEL_SLICE
@@ -638,6 +644,7 @@ static int hls_slice_header(HEVCContext *s)
 
     // Coded parameters
     first_slice_in_pic_flag = get_bits1(gb);
+    printBitContext(gb);
 #if PARALLEL_SLICE
     if (IS_IRAP(s)) {
         if(!first_slice_in_pic_flag) {
