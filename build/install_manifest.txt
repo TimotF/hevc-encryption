@@ -1,4 +1,0 @@
-/usr/local/include/openHevcWrapper.h
-/usr/local/include/hevcdsp.h
-/usr/local/include/hevcpred.h
-/usr/local/lib/libLibOpenHevcWrapper.so
