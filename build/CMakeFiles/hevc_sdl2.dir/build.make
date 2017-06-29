@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/tfrignac/git/openHEVC
+CMAKE_SOURCE_DIR = /home/tfrignac/git/hevc-encryption
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/tfrignac/git/openHEVC/build
+CMAKE_BINARY_DIR = /home/tfrignac/git/hevc-encryption/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/hevc_sdl2.dir/depend.make
@@ -59,16 +59,16 @@ include CMakeFiles/hevc_sdl2.dir/flags.make
 
 CMakeFiles/hevc_sdl2.dir/cmdutils.c.o: CMakeFiles/hevc_sdl2.dir/flags.make
 CMakeFiles/hevc_sdl2.dir/cmdutils.c.o: ../cmdutils.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/hevc_sdl2.dir/cmdutils.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_sdl2.dir/cmdutils.c.o   -c /home/tfrignac/git/openHEVC/cmdutils.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/hevc_sdl2.dir/cmdutils.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_sdl2.dir/cmdutils.c.o   -c /home/tfrignac/git/hevc-encryption/cmdutils.c
 
 CMakeFiles/hevc_sdl2.dir/cmdutils.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/hevc_sdl2.dir/cmdutils.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/openHEVC/cmdutils.c > CMakeFiles/hevc_sdl2.dir/cmdutils.c.i
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/hevc-encryption/cmdutils.c > CMakeFiles/hevc_sdl2.dir/cmdutils.c.i
 
 CMakeFiles/hevc_sdl2.dir/cmdutils.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/hevc_sdl2.dir/cmdutils.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/openHEVC/cmdutils.c -o CMakeFiles/hevc_sdl2.dir/cmdutils.c.s
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/hevc-encryption/cmdutils.c -o CMakeFiles/hevc_sdl2.dir/cmdutils.c.s
 
 CMakeFiles/hevc_sdl2.dir/cmdutils.c.o.requires:
 
@@ -83,16 +83,16 @@ CMakeFiles/hevc_sdl2.dir/cmdutils.c.o.provides.build: CMakeFiles/hevc_sdl2.dir/c
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.o: CMakeFiles/hevc_sdl2.dir/flags.make
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.o: ../ohplay_utils/main.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.o   -c /home/tfrignac/git/openHEVC/ohplay_utils/main.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.o   -c /home/tfrignac/git/hevc-encryption/ohplay_utils/main.c
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/openHEVC/ohplay_utils/main.c > CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.i
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/hevc-encryption/ohplay_utils/main.c > CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.i
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/openHEVC/ohplay_utils/main.c -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.s
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/hevc-encryption/ohplay_utils/main.c -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.s
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.o.requires:
 
@@ -107,16 +107,16 @@ CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.o.provides.build: CMakeFiles/hevc_s
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.o: CMakeFiles/hevc_sdl2.dir/flags.make
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.o: ../ohplay_utils/ohdisplay_sdl2.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.o   -c /home/tfrignac/git/openHEVC/ohplay_utils/ohdisplay_sdl2.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.o   -c /home/tfrignac/git/hevc-encryption/ohplay_utils/ohdisplay_sdl2.c
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -E /home/tfrignac/git/openHEVC/ohplay_utils/ohdisplay_sdl2.c > CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.i
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -E /home/tfrignac/git/hevc-encryption/ohplay_utils/ohdisplay_sdl2.c > CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.i
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -S /home/tfrignac/git/openHEVC/ohplay_utils/ohdisplay_sdl2.c -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.s
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -S /home/tfrignac/git/hevc-encryption/ohplay_utils/ohdisplay_sdl2.c -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.s
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.o.requires:
 
@@ -131,16 +131,16 @@ CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.o.provides.build: CMakeFi
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.o: CMakeFiles/hevc_sdl2.dir/flags.make
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.o: ../ohplay_utils/ohtimer_sdl.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.o   -c /home/tfrignac/git/openHEVC/ohplay_utils/ohtimer_sdl.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.o   -c /home/tfrignac/git/hevc-encryption/ohplay_utils/ohtimer_sdl.c
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -E /home/tfrignac/git/openHEVC/ohplay_utils/ohtimer_sdl.c > CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.i
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -E /home/tfrignac/git/hevc-encryption/ohplay_utils/ohtimer_sdl.c > CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.i
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -S /home/tfrignac/git/openHEVC/ohplay_utils/ohtimer_sdl.c -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.s
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -I"/usr/include/SDL2" -S /home/tfrignac/git/hevc-encryption/ohplay_utils/ohtimer_sdl.c -o CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.s
 
 CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.o.requires:
 
@@ -168,11 +168,11 @@ hevc_sdl2: CMakeFiles/hevc_sdl2.dir/ohplay_utils/main.c.o
 hevc_sdl2: CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohdisplay_sdl2.c.o
 hevc_sdl2: CMakeFiles/hevc_sdl2.dir/ohplay_utils/ohtimer_sdl.c.o
 hevc_sdl2: CMakeFiles/hevc_sdl2.dir/build.make
-hevc_sdl2: libLibOpenHevcWrapper.a
+hevc_sdl2: libLibOpenHevcWrapper.so
 hevc_sdl2: /usr/lib/x86_64-linux-gnu/libSDL2main.a
 hevc_sdl2: /usr/lib/x86_64-linux-gnu/libSDL2.so
 hevc_sdl2: CMakeFiles/hevc_sdl2.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable hevc_sdl2"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking C executable hevc_sdl2"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hevc_sdl2.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -192,6 +192,6 @@ CMakeFiles/hevc_sdl2.dir/clean:
 .PHONY : CMakeFiles/hevc_sdl2.dir/clean
 
 CMakeFiles/hevc_sdl2.dir/depend:
-	cd /home/tfrignac/git/openHEVC/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/tfrignac/git/openHEVC /home/tfrignac/git/openHEVC /home/tfrignac/git/openHEVC/build /home/tfrignac/git/openHEVC/build /home/tfrignac/git/openHEVC/build/CMakeFiles/hevc_sdl2.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/tfrignac/git/hevc-encryption/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/tfrignac/git/hevc-encryption /home/tfrignac/git/hevc-encryption /home/tfrignac/git/hevc-encryption/build /home/tfrignac/git/hevc-encryption/build /home/tfrignac/git/hevc-encryption/build/CMakeFiles/hevc_sdl2.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/hevc_sdl2.dir/depend
 

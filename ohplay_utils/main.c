@@ -143,6 +143,20 @@ typedef struct Info {
     int size;
 } Info;
 
+/**
+* \brief Open a file for writing.
+*
+* If the file is "-", stdout is used.
+*
+* \param filename  name of the file to open or "-"
+* \return          the opened file or NULL if opening fails
+*/
+static FILE* open_output_file(const char* filename)
+{
+    if (!strcmp(filename, "-")) return stdout;
+    return fopen(filename, "wb");
+}
+
 static void video_decode_example(const char *filename,const char *enh_filename)
 {
 	AVFormatContext *pFormatCtx[2];
@@ -152,7 +166,7 @@ static void video_decode_example(const char *filename,const char *enh_filename)
     int split_layers = enh_filename != NULL;//fixme: we do not check the -e option here
     int AVC_BL_only = AVC_BL && !split_layers;
 
-    FILE *fout  = NULL;
+    FILE *fout = NULL; //!< output file (HEVC NAL stream)
     int width   = -1;
     int height  = -1;
     int nbFrame = 0;
@@ -233,6 +247,14 @@ static void video_decode_example(const char *filename,const char *enh_filename)
 
     }
 
+    if(output_file){
+        fout = open_output_file(output_file);
+        if (fout == NULL) {
+            fprintf(stderr, "Could not open output file, shutting down!\n");
+            exit(1);
+        }
+    }
+
     libOpenHevcSetDebugMode(openHevcHandle, OHEVC_LOG_INFO);
     libOpenHevcStartDecoder(openHevcHandle);
     oh_set_crypto_mode(openHevcHandle,crypto_args);
@@ -302,25 +324,8 @@ static void video_decode_example(const char *filename,const char *enh_filename)
 				    width  = openHevcFrame.frameInfo.nWidth;
 				    height = openHevcFrame.frameInfo.nHeight;
 
-					if (fout)
-					   fclose(fout);
-
-					if (output_file) {
-						sprintf(output_file2, "%s_%dx%d.yuv", output_file, width, height);
-						fout = fopen(output_file2, "wb");
-					}
-
 					if (fout) {
-						libOpenHevcGetPictureInfo(openHevcHandle, &openHevcFrameCpy.frameInfo);
-						int format = openHevcFrameCpy.frameInfo.chromat_format == YUV420 ? 1 : 0;
-						if(openHevcFrameCpy.pvY) {
-							free(openHevcFrameCpy.pvY);
-							free(openHevcFrameCpy.pvU);
-							free(openHevcFrameCpy.pvV);
-						}
-						openHevcFrameCpy.pvY = calloc (openHevcFrameCpy.frameInfo.nYPitch * openHevcFrameCpy.frameInfo.nHeight, sizeof(unsigned char));
-						openHevcFrameCpy.pvU = calloc (openHevcFrameCpy.frameInfo.nUPitch * openHevcFrameCpy.frameInfo.nHeight >> format, sizeof(unsigned char));
-						openHevcFrameCpy.pvV = calloc (openHevcFrameCpy.frameInfo.nVPitch * openHevcFrameCpy.frameInfo.nHeight >> format, sizeof(unsigned char));
+                        //TODO
 					}
 				}// end of frame resizing
 
@@ -338,11 +343,8 @@ static void video_decode_example(const char *filename,const char *enh_filename)
 				/* Write output file if any
 				 * */
 				if (fout) {
-					int format = openHevcFrameCpy.frameInfo.chromat_format == YUV420 ? 1 : 0;
-					libOpenHevcGetOutputCpy(openHevcHandle, 1, &openHevcFrameCpy);
-					fwrite( openHevcFrameCpy.pvY , sizeof(uint8_t) , openHevcFrameCpy.frameInfo.nYPitch * openHevcFrameCpy.frameInfo.nHeight, fout);
-					fwrite( openHevcFrameCpy.pvU , sizeof(uint8_t) , openHevcFrameCpy.frameInfo.nUPitch * openHevcFrameCpy.frameInfo.nHeight >> format, fout);
-					fwrite( openHevcFrameCpy.pvV , sizeof(uint8_t) , openHevcFrameCpy.frameInfo.nVPitch * openHevcFrameCpy.frameInfo.nHeight >> format, fout);
+					//int format = openHevcFrameCpy.frameInfo.chromat_format == YUV420 ? 1 : 0;
+					//libOpenHevcGetOutputCpy(openHevcHandle, 1, &openHevcFrameCpy);
 				}
 				nbFrame++;
 
@@ -375,11 +377,6 @@ static void video_decode_example(const char *filename,const char *enh_filename)
 
     if (fout) {
         fclose(fout);
-        if(openHevcFrameCpy.pvY) {
-            free(openHevcFrameCpy.pvY);
-            free(openHevcFrameCpy.pvU);
-            free(openHevcFrameCpy.pvV);
-        }
     }
     if(!split_layers)
         avformat_close_input(&pFormatCtx[0]);

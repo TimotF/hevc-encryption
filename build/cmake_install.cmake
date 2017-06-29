@@ -1,4 +1,4 @@
-# Install script for directory: /home/tfrignac/git/openHEVC
+# Install script for directory: /home/tfrignac/git/hevc-encryption
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,14 +34,30 @@ endif()
 
 if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE FILE FILES
-    "/home/tfrignac/git/openHEVC/gpac/modules/openhevc_dec/openHevcWrapper.h"
-    "/home/tfrignac/git/openHEVC/libavcodec/hevcdsp.h"
-    "/home/tfrignac/git/openHEVC/libavcodec/hevcpred.h"
+    "/home/tfrignac/git/hevc-encryption/gpac/modules/openhevc_dec/openHevcWrapper.h"
+    "/home/tfrignac/git/hevc-encryption/libavcodec/hevcdsp.h"
+    "/home/tfrignac/git/hevc-encryption/libavcodec/hevcpred.h"
     )
 endif()
 
 if(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "/home/tfrignac/git/openHEVC/build/libLibOpenHevcWrapper.a")
+  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libLibOpenHevcWrapper.so" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libLibOpenHevcWrapper.so")
+    file(RPATH_CHECK
+         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libLibOpenHevcWrapper.so"
+         RPATH "")
+  endif()
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/home/tfrignac/git/hevc-encryption/build/libLibOpenHevcWrapper.so")
+  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libLibOpenHevcWrapper.so" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libLibOpenHevcWrapper.so")
+    file(RPATH_CHANGE
+         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libLibOpenHevcWrapper.so"
+         OLD_RPATH "/opt/local/lib:"
+         NEW_RPATH "")
+    if(CMAKE_INSTALL_DO_STRIP)
+      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libLibOpenHevcWrapper.so")
+    endif()
+  endif()
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -52,5 +68,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/tfrignac/git/openHEVC/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/tfrignac/git/hevc-encryption/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

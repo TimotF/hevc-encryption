@@ -3,15 +3,15 @@
 
 # compile C with /usr/bin/cc
 # compile CXX with /usr/bin/c++
-C_FLAGS =  -Wl,-Bsymbolic -fdiagnostics-color -march=sandybridge -msse2 -msse2 -msse3 -msse3 -mssse3 -mssse3 -msse4.1 -msse4.1 -msse4.2 -msse4.2 -mavx -mavx -msse2avx -msse2avx -mno-sse4a -mno-xop -mno-fma4 -mno-avx2 -fpic -fno-tree-vectorize -Wl,-Bsymbolic -O3 -DNDEBUG  
+C_FLAGS =  -Wl,-Bsymbolic -fdiagnostics-color -march=sandybridge -msse2 -msse2 -msse3 -msse3 -mssse3 -mssse3 -msse4.1 -msse4.1 -msse4.2 -msse4.2 -mavx -mavx -msse2avx -msse2avx -mno-sse4a -mno-xop -mno-fma4 -mno-avx2 -fpic -fno-tree-vectorize -Wl,-Bsymbolic -O3 -DNDEBUG -fPIC  
 
-C_DEFINES = -DHAVE_AV_CONFIG_H -DPIC
+C_DEFINES = -DHAVE_AV_CONFIG_H -DLibOpenHevcWrapper_EXPORTS -DPIC
 
-C_INCLUDES = -I/opt/local/include -I/home/tfrignac/git/openHEVC/. -I/home/tfrignac/git/openHEVC/gpac/modules/openhevc_dec -I/home/tfrignac/git/openHEVC/platform/x86 
+C_INCLUDES = -I/opt/local/include -I/home/tfrignac/git/hevc-encryption/. -I/home/tfrignac/git/hevc-encryption/gpac/modules/openhevc_dec -I/home/tfrignac/git/hevc-encryption/platform/x86 
 
-CXX_FLAGS = -Wl,-Bsymbolic -O3 -DNDEBUG  
+CXX_FLAGS = -Wl,-Bsymbolic -O3 -DNDEBUG -fPIC  
 
-CXX_DEFINES = -DHAVE_AV_CONFIG_H -DPIC
+CXX_DEFINES = -DHAVE_AV_CONFIG_H -DLibOpenHevcWrapper_EXPORTS -DPIC
 
-CXX_INCLUDES = -I/opt/local/include -I/home/tfrignac/git/openHEVC/. -I/home/tfrignac/git/openHEVC/gpac/modules/openhevc_dec -I/home/tfrignac/git/openHEVC/platform/x86 
+CXX_INCLUDES = -I/opt/local/include -I/home/tfrignac/git/hevc-encryption/. -I/home/tfrignac/git/hevc-encryption/gpac/modules/openhevc_dec -I/home/tfrignac/git/hevc-encryption/platform/x86 
 

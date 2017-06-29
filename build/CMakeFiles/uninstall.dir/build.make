@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/tfrignac/git/openHEVC
+CMAKE_SOURCE_DIR = /home/tfrignac/git/hevc-encryption
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/tfrignac/git/openHEVC/build
+CMAKE_BINARY_DIR = /home/tfrignac/git/hevc-encryption/build
 
 # Utility rule file for uninstall.
 
@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/tfrignac/git/openHEVC/build
 include CMakeFiles/uninstall.dir/progress.make
 
 CMakeFiles/uninstall:
-	/usr/bin/cmake -P /home/tfrignac/git/openHEVC/build/uninstall_target.cmake
+	/usr/bin/cmake -P /home/tfrignac/git/hevc-encryption/build/uninstall_target.cmake
 
 uninstall: CMakeFiles/uninstall
 uninstall: CMakeFiles/uninstall.dir/build.make
@@ -71,6 +71,6 @@ CMakeFiles/uninstall.dir/clean:
 .PHONY : CMakeFiles/uninstall.dir/clean
 
 CMakeFiles/uninstall.dir/depend:
-	cd /home/tfrignac/git/openHEVC/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/tfrignac/git/openHEVC /home/tfrignac/git/openHEVC /home/tfrignac/git/openHEVC/build /home/tfrignac/git/openHEVC/build /home/tfrignac/git/openHEVC/build/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/tfrignac/git/hevc-encryption/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/tfrignac/git/hevc-encryption /home/tfrignac/git/hevc-encryption /home/tfrignac/git/hevc-encryption/build /home/tfrignac/git/hevc-encryption/build /home/tfrignac/git/hevc-encryption/build/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/uninstall.dir/depend
 

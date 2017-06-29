@@ -162,7 +162,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/LibOpenHevcWrapper.dir/libavcodec/x86/h264chroma_init.c.o"
   "CMakeFiles/LibOpenHevcWrapper.dir/libavcodec/crypto.cpp.o"
   "libLibOpenHevcWrapper.pdb"
-  "libLibOpenHevcWrapper.a"
+  "libLibOpenHevcWrapper.so"
 )
 
 # Per-language clean rules from dependency scanning.

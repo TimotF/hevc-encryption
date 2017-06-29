@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/tfrignac/git/openHEVC
+CMAKE_SOURCE_DIR = /home/tfrignac/git/hevc-encryption
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/tfrignac/git/openHEVC/build
+CMAKE_BINARY_DIR = /home/tfrignac/git/hevc-encryption/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/hevc_nodisplay.dir/depend.make
@@ -59,16 +59,16 @@ include CMakeFiles/hevc_nodisplay.dir/flags.make
 
 CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o: CMakeFiles/hevc_nodisplay.dir/flags.make
 CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o: ../cmdutils.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o   -c /home/tfrignac/git/openHEVC/cmdutils.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o   -c /home/tfrignac/git/hevc-encryption/cmdutils.c
 
 CMakeFiles/hevc_nodisplay.dir/cmdutils.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/hevc_nodisplay.dir/cmdutils.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/openHEVC/cmdutils.c > CMakeFiles/hevc_nodisplay.dir/cmdutils.c.i
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/hevc-encryption/cmdutils.c > CMakeFiles/hevc_nodisplay.dir/cmdutils.c.i
 
 CMakeFiles/hevc_nodisplay.dir/cmdutils.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/hevc_nodisplay.dir/cmdutils.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/openHEVC/cmdutils.c -o CMakeFiles/hevc_nodisplay.dir/cmdutils.c.s
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/hevc-encryption/cmdutils.c -o CMakeFiles/hevc_nodisplay.dir/cmdutils.c.s
 
 CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o.requires:
 
@@ -83,16 +83,16 @@ CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o.provides.build: CMakeFiles/hevc_nodis
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o: CMakeFiles/hevc_nodisplay.dir/flags.make
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o: ../ohplay_utils/main.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o   -c /home/tfrignac/git/openHEVC/ohplay_utils/main.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o   -c /home/tfrignac/git/hevc-encryption/ohplay_utils/main.c
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/openHEVC/ohplay_utils/main.c > CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.i
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/hevc-encryption/ohplay_utils/main.c > CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.i
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/openHEVC/ohplay_utils/main.c -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.s
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/hevc-encryption/ohplay_utils/main.c -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.s
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o.requires:
 
@@ -107,16 +107,16 @@ CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o.provides.build: CMakeFiles/h
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o: CMakeFiles/hevc_nodisplay.dir/flags.make
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o: ../ohplay_utils/ohdisplay_none.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o   -c /home/tfrignac/git/openHEVC/ohplay_utils/ohdisplay_none.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o   -c /home/tfrignac/git/hevc-encryption/ohplay_utils/ohdisplay_none.c
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/openHEVC/ohplay_utils/ohdisplay_none.c > CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.i
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/hevc-encryption/ohplay_utils/ohdisplay_none.c > CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.i
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/openHEVC/ohplay_utils/ohdisplay_none.c -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.s
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/hevc-encryption/ohplay_utils/ohdisplay_none.c -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.s
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o.requires:
 
@@ -131,16 +131,16 @@ CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o.provides.build: CM
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o: CMakeFiles/hevc_nodisplay.dir/flags.make
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o: ../ohplay_utils/ohtimer_sys.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o   -c /home/tfrignac/git/openHEVC/ohplay_utils/ohtimer_sys.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o   -c /home/tfrignac/git/hevc-encryption/ohplay_utils/ohtimer_sys.c
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/openHEVC/ohplay_utils/ohtimer_sys.c > CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.i
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/tfrignac/git/hevc-encryption/ohplay_utils/ohtimer_sys.c > CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.i
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/openHEVC/ohplay_utils/ohtimer_sys.c -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.s
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/tfrignac/git/hevc-encryption/ohplay_utils/ohtimer_sys.c -o CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.s
 
 CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o.requires:
 
@@ -168,9 +168,9 @@ hevc_nodisplay: CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o
 hevc_nodisplay: CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o
 hevc_nodisplay: CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o
 hevc_nodisplay: CMakeFiles/hevc_nodisplay.dir/build.make
-hevc_nodisplay: libLibOpenHevcWrapper.a
+hevc_nodisplay: libLibOpenHevcWrapper.so
 hevc_nodisplay: CMakeFiles/hevc_nodisplay.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tfrignac/git/openHEVC/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable hevc_nodisplay"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tfrignac/git/hevc-encryption/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking C executable hevc_nodisplay"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hevc_nodisplay.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -190,6 +190,6 @@ CMakeFiles/hevc_nodisplay.dir/clean:
 .PHONY : CMakeFiles/hevc_nodisplay.dir/clean
 
 CMakeFiles/hevc_nodisplay.dir/depend:
-	cd /home/tfrignac/git/openHEVC/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/tfrignac/git/openHEVC /home/tfrignac/git/openHEVC /home/tfrignac/git/openHEVC/build /home/tfrignac/git/openHEVC/build /home/tfrignac/git/openHEVC/build/CMakeFiles/hevc_nodisplay.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/tfrignac/git/hevc-encryption/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/tfrignac/git/hevc-encryption /home/tfrignac/git/hevc-encryption /home/tfrignac/git/hevc-encryption/build /home/tfrignac/git/hevc-encryption/build /home/tfrignac/git/hevc-encryption/build/CMakeFiles/hevc_nodisplay.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/hevc_nodisplay.dir/depend
 

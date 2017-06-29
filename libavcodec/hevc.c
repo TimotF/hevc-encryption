@@ -625,6 +625,7 @@ int set_el_parameter(HEVCContext *s) {
 
 static int hls_slice_header(HEVCContext *s)
 {
+    //printf("hls_slice_header\n");
     GetBitContext *gb = &s->HEVClc->gb;
     SliceHeader *sh   = &s->sh;
 //#if PARALLEL_SLICE

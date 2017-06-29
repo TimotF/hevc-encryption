@@ -6,5 +6,5 @@ C_FLAGS =  -Wl,-Bsymbolic -fdiagnostics-color -march=sandybridge -msse2 -msse2 -
 
 C_DEFINES = -DHAVE_AV_CONFIG_H -DPIC
 
-C_INCLUDES = -I/opt/local/include -I/home/tfrignac/git/openHEVC/. -I/home/tfrignac/git/openHEVC/gpac/modules/openhevc_dec -I/home/tfrignac/git/openHEVC/platform/x86 
+C_INCLUDES = -I/opt/local/include -I/home/tfrignac/git/hevc-encryption/. -I/home/tfrignac/git/hevc-encryption/gpac/modules/openhevc_dec -I/home/tfrignac/git/hevc-encryption/platform/x86 
 

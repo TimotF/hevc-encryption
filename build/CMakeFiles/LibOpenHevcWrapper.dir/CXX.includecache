@@ -24,7 +24,7 @@ libavutil/attributes.h
 
 .././libavutil/attributes.h
 
-/home/tfrignac/git/openHEVC/libavcodec/crypto.cpp
+/home/tfrignac/git/hevc-encryption/libavcodec/crypto.cpp
 libavcodec/crypto.h
 -
 cryptopp/aes.h

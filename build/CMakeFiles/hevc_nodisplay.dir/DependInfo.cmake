@@ -4,10 +4,10 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/home/tfrignac/git/openHEVC/cmdutils.c" "/home/tfrignac/git/openHEVC/build/CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o"
-  "/home/tfrignac/git/openHEVC/ohplay_utils/main.c" "/home/tfrignac/git/openHEVC/build/CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o"
-  "/home/tfrignac/git/openHEVC/ohplay_utils/ohdisplay_none.c" "/home/tfrignac/git/openHEVC/build/CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o"
-  "/home/tfrignac/git/openHEVC/ohplay_utils/ohtimer_sys.c" "/home/tfrignac/git/openHEVC/build/CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o"
+  "/home/tfrignac/git/hevc-encryption/cmdutils.c" "/home/tfrignac/git/hevc-encryption/build/CMakeFiles/hevc_nodisplay.dir/cmdutils.c.o"
+  "/home/tfrignac/git/hevc-encryption/ohplay_utils/main.c" "/home/tfrignac/git/hevc-encryption/build/CMakeFiles/hevc_nodisplay.dir/ohplay_utils/main.c.o"
+  "/home/tfrignac/git/hevc-encryption/ohplay_utils/ohdisplay_none.c" "/home/tfrignac/git/hevc-encryption/build/CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohdisplay_none.c.o"
+  "/home/tfrignac/git/hevc-encryption/ohplay_utils/ohtimer_sys.c" "/home/tfrignac/git/hevc-encryption/build/CMakeFiles/hevc_nodisplay.dir/ohplay_utils/ohtimer_sys.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 
@@ -27,7 +27,7 @@ set(CMAKE_C_TARGET_INCLUDE_PATH
 
 # Targets to which this target links.
 set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/home/tfrignac/git/openHEVC/build/CMakeFiles/LibOpenHevcWrapper.dir/DependInfo.cmake"
+  "/home/tfrignac/git/hevc-encryption/build/CMakeFiles/LibOpenHevcWrapper.dir/DependInfo.cmake"
   )
 
 # Fortran module output directory.
