@@ -20,10 +20,10 @@
 
 #include "cabac.h"
 
-#include "encoder.h"
+//#include "encoder.h"
 #include "encoderstate.h"
 #include "extras/crypto.h"
-#include "kvazaar.h"
+//#include "kvazaar.h"
 
 const uint8_t kvz_g_auc_next_state_mps[128] =
 {

@@ -26,8 +26,8 @@
  * Interface for distortion metric functions.
  */
 
-#include "global.h" // IWYU pragma: keep
-#include "kvazaar.h"
+#include "../global.h" // IWYU pragma: keep
+#include "../kvazaar.h"
 
 
 typedef kvz_pixel (*pred_buffer)[32 * 32];

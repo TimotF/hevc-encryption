@@ -18,9 +18,9 @@
  * with Kvazaar.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include "strategies/strategies-nal.h"
+#include "strategies-nal.h"
 
-#include "strategies/generic/nal-generic.h"
+#include "generic/nal-generic.h"
 
 
 void (*kvz_array_checksum)(const kvz_pixel* data,

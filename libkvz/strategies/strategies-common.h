@@ -7,7 +7,7 @@
  * Common tools strategies.
  */
 
-#include "global.h" // IWYU pragma: keep
+#include "../global.h" // IWYU pragma: keep
 
 
 #endif //STRATEGIES_COMMON_H_

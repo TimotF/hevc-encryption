@@ -18,10 +18,10 @@
  * with Kvazaar.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include "strategies/strategies-sao.h"
-#include "strategies/avx2/sao-avx2.h"
-#include "strategies/generic/sao-generic.h"
-#include "strategyselector.h"
+#include "strategies-sao.h"
+#include "avx2/sao-avx2.h"
+#include "generic/sao-generic.h"
+#include "../strategyselector.h"
 
 
 // Define function pointers.

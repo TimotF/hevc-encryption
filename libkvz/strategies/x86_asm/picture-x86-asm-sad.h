@@ -26,7 +26,7 @@
  * Optimizations for AVX, utilizing ASM implementations.
  */
 
-#include "global.h" // IWYU pragma: keep
+#include "../../global.h" // IWYU pragma: keep
 
 
 unsigned kvz_sad_4x4_avx(const kvz_pixel*, const kvz_pixel*);

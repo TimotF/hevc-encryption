@@ -419,10 +419,52 @@ set(libfilenames
     gpac/modules/openhevc_dec/openHevcWrapper.c
 
 # libkvz
-    libkvz/cabac.c
-    libkvz/bitstream.c
     libkvz/extras/crypto.cpp
-
+#    libkvz/extras/getopt.c
+#    libkvz/extras/libmd5.c
+#    libkvz/strategies/strategies-dct.c
+#    libkvz/strategies/strategies-intra.c
+#    libkvz/strategies/strategies-ipol.c
+#    libkvz/strategies/strategies-nal.c
+#    libkvz/strategies/strategies-picture.c
+#    libkvz/strategies/strategies-quant.c
+#    libkvz/strategies/strategies-sao.c
+    libkvz/bitstream.c
+    libkvz/cabac.c
+#    libkvz/cfg.c
+#    libkvz/checkpoint.c
+#    libkvz/cli.c
+#    libkvz/context.c
+#    libkvz/cu.c
+#    libkvz/encmain.c
+#    libkvz/encode_coding_tree.c
+#    libkvz/encoder_state-bitstream.c
+#    libkvz/encoder_state-ctors_dtors.c
+#    libkvz/encoder_state-geometry.c
+#    libkvz/encoder.c
+#    libkvz/encoderstate.c
+#    libkvz/filter.c
+#    libkvz/image.c
+#    libkvz/imagelist.c
+#    libkvz/input_frame_buffer.c
+#    libkvz/inter.c
+#    libkvz/intra.c
+#    libkvz/kvazaar.c
+#    libkvz/nal.c
+#    libkvz/rate_control.c
+#    libkvz/rdo.c
+#    libkvz/sao.c
+#    libkvz/scalinglist.c
+#    libkvz/search_inter.c
+#    libkvz/search_intra.c
+#    libkvz/search.c
+#    libkvz/strategyselector.c
+#    libkvz/tables.c
+#    libkvz/threadqueue.c
+#    libkvz/transform.c
+#    libkvz/videoframe.c
+#    libkvz/yuv_io.c
+  
 )
 if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "armv7l")
 list(APPEND libfilenames

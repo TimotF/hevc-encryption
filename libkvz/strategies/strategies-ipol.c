@@ -18,11 +18,11 @@
  * with Kvazaar.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include "strategies/strategies-ipol.h"
+#include "strategies-ipol.h"
 
-#include "strategies/avx2/ipol-avx2.h"
-#include "strategies/generic/ipol-generic.h"
-#include "strategyselector.h"
+#include "avx2/ipol-avx2.h"
+#include "generic/ipol-generic.h"
+#include "../strategyselector.h"
 
 
 // Define function pointers.

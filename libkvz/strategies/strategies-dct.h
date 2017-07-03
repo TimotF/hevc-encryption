@@ -26,7 +26,7 @@
  * Interface for transform functions.
  */
 
-#include "global.h" // IWYU pragma: keep
+#include "../global.h" // IWYU pragma: keep
 
 
 typedef unsigned (dct_func)(int8_t bitdepth, const int16_t *input, int16_t *output);

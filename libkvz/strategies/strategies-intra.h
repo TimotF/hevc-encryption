@@ -26,8 +26,8 @@
  * Interface for intra prediction functions.
  */
 
-#include "global.h" // IWYU pragma: keep
-#include "kvazaar.h"
+#include "../global.h" // IWYU pragma: keep
+#include "../kvazaar.h"
 
 
 typedef void (angular_pred_func)(

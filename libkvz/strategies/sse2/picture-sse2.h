@@ -26,7 +26,7 @@
 * Optimizations for SSE2.
 */
 
-#include "global.h" // IWYU pragma: keep
+#include "../../global.h" // IWYU pragma: keep
 
 
 int kvz_strategy_register_picture_sse2(void* opaque, unsigned char bitdepth);

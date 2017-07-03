@@ -26,7 +26,7 @@
  * Optimizations for Altivec.
  */
 
-#include  "global.h" // IWYU pragma: keep
+#include  "../../global.h" // IWYU pragma: keep
 
 
 int kvz_strategy_register_picture_altivec(void* opaque, uint8_t bitdepth);

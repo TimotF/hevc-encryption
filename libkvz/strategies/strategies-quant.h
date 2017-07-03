@@ -26,11 +26,11 @@
  * Interface for quantization functions.
  */
 
-#include "cu.h"
-#include "encoderstate.h"
-#include "global.h" // IWYU pragma: keep
-#include "kvazaar.h"
-#include "tables.h"
+#include "../cu.h"
+#include "../encoderstate.h"
+#include "../global.h" // IWYU pragma: keep
+#include "../kvazaar.h"
+#include "../tables.h"
 
 
 // Declare function pointers.

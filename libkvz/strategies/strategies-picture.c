@@ -18,15 +18,15 @@
  * with Kvazaar.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include "strategies/strategies-picture.h"
+#include "strategies-picture.h"
 
-#include "strategies/altivec/picture-altivec.h"
-#include "strategies/avx2/picture-avx2.h"
-#include "strategies/generic/picture-generic.h"
-#include "strategies/sse2/picture-sse2.h"
-#include "strategies/sse41/picture-sse41.h"
-#include "strategies/x86_asm/picture-x86-asm.h"
-#include "strategyselector.h"
+#include "altivec/picture-altivec.h"
+#include "avx2/picture-avx2.h"
+#include "generic/picture-generic.h"
+#include "sse2/picture-sse2.h"
+#include "sse41/picture-sse41.h"
+#include "x86_asm/picture-x86-asm.h"
+#include "../strategyselector.h"
 
 
 // Define function pointers.

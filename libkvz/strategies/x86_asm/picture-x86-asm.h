@@ -26,8 +26,7 @@
  * Optimizations for AVX, utilizing ASM implementations.
  */
 
-#include "global.h" // IWYU pragma: keep
-
+#include "../../global.h" // IWYU pragma: keep
 
 int kvz_strategy_register_picture_x86_asm_avx(void* opaque, uint8_t bitdepth);
 

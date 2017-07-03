@@ -18,11 +18,11 @@
  * with Kvazaar.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include "strategies/strategies-quant.h"
+#include "strategies-quant.h"
 
-#include "strategies/avx2/quant-avx2.h"
-#include "strategies/generic/quant-generic.h"
-#include "strategyselector.h"
+#include "avx2/quant-avx2.h"
+#include "generic/quant-generic.h"
+#include "../strategyselector.h"
 
 
 // Define function pointers.

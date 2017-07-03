@@ -26,7 +26,7 @@
  * Generic C implementations of optimized functions.
  */
 
-#include "global.h" // IWYU pragma: keep
+#include "../../global.h" // IWYU pragma: keep
 
 int kvz_strategy_register_sao_generic(void* opaque, uint8_t bitdepth);
 

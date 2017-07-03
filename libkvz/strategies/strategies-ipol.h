@@ -26,10 +26,10 @@
  * Interface for subpixel interpolation functions.
  */
 
-#include "encoder.h"
-#include "global.h" // IWYU pragma: keep
-#include "kvazaar.h"
-#include "search_inter.h"
+#include "../encoder.h"
+#include "../global.h" // IWYU pragma: keep
+#include "../kvazaar.h"
+#include "../search_inter.h"
 
 
 typedef struct { kvz_pixel *buffer; kvz_pixel *orig_topleft; unsigned stride; unsigned malloc_used; } kvz_extended_block;

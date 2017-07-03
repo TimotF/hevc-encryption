@@ -18,11 +18,11 @@
  * with Kvazaar.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#include "strategies/strategies-dct.h"
+#include "strategies-dct.h"
 
 #include "avx2/dct-avx2.h"
 #include "generic/dct-generic.h"
-#include "strategyselector.h"
+#include "../strategyselector.h"
 
 
 // Define function pointers.

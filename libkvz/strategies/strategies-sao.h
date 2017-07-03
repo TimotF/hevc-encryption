@@ -26,11 +26,11 @@
  * Interface for sao functions.
  */
 
-#include "encoder.h"
-#include "encoderstate.h"
-#include "global.h" // IWYU pragma: keep
-#include "kvazaar.h"
-#include "sao.h"
+#include "../encoder.h"
+#include "../encoderstate.h"
+#include "../global.h" // IWYU pragma: keep
+#include "../kvazaar.h"
+#include "../sao.h"
 
 
 // Declare function pointers.
