@@ -1145,7 +1145,7 @@ static void parse_vps_extension (GetBitContext *gb, AVCodecContext *avctx, HEVCV
 int ff_hevc_decode_nal_vps(GetBitContext *gb, AVCodecContext *avctx,
                            HEVCParamSets *ps)
 {
-    printBitContext(gb);
+    // printBitContext(gb);
     int i,j;
     HEVCVPS *vps;
     AVBufferRef *vps_buf = av_buffer_allocz(sizeof(*vps));
