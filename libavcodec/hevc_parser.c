@@ -239,6 +239,11 @@ static inline int parse_nal_units(AVCodecParserContext *s, const uint8_t *buf,
     H2645NAL *nal;
     int is_global = buf == avctx->extradata;
 
+
+    printf("buffer avant consumed :\n");
+    for(i=0;i<buf_size;i++) printf("%02x ",buf[i]);
+    printf("\n");
+
     if (!h->HEVClc)
         h->HEVClc = av_mallocz(sizeof(HEVCLocalContext));
     if (!h->HEVClc)
@@ -285,12 +290,17 @@ static inline int parse_nal_units(AVCodecParserContext *s, const uint8_t *buf,
             if (src_length > 20)
                 src_length = 20;
         }
-
+        
         consumed = ff_h2645_extract_rbsp(buf, src_length, nal, 1);
+        
         if (consumed < 0)
             return consumed;
-
+        
         ret = init_get_bits8(gb, nal->data + 2, nal->size);
+        printf("buffer apres init :\n");
+        for(i=0;i<nal->size;i++) printf("%02x ",*(nal->data + 2+i));
+        printf("\n");
+
         if (ret < 0)
             return ret;
 

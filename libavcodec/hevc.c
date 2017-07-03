@@ -210,6 +210,13 @@ fail:
     return AVERROR(ENOMEM);
 }
 
+static void printBitContext(GetBitContext *gb){
+    int index;
+    for(index = 0; index<(gb->index); index++){
+        printf("%02x ",gb->buffer[index]);
+    }
+}
+
 static void pred_weight_table(HEVCContext *s, GetBitContext *gb)
 {
     int i = 0;
@@ -221,6 +228,7 @@ static void pred_weight_table(HEVCContext *s, GetBitContext *gb)
     int luma_log2_weight_denom;
 
     luma_log2_weight_denom = get_ue_golomb_long(gb);
+
     if (luma_log2_weight_denom < 0 || luma_log2_weight_denom > 7)
         av_log(s->avctx, AV_LOG_ERROR, "luma_log2_weight_denom %d is invalid\n", luma_log2_weight_denom);
     s->sh.luma_log2_weight_denom = av_clip_uintp2(luma_log2_weight_denom, 7);
@@ -622,13 +630,6 @@ int set_el_parameter(HEVCContext *s) {
     return ret;
 }
 
-static void printBitContext(GetBitContext *gb){
-    int index;
-    for(index = 0; index<(gb->index); index++){
-        printf("%02x ",gb->buffer[index]);
-    }
-}
-
 static int hls_slice_header(HEVCContext *s)
 {
     printf("hls_slice_header\n");
@@ -644,7 +645,7 @@ static int hls_slice_header(HEVCContext *s)
 
     // Coded parameters
     first_slice_in_pic_flag = get_bits1(gb);
-    printBitContext(gb);
+    //printBitContext(gb);
 #if PARALLEL_SLICE
     if (IS_IRAP(s)) {
         if(!first_slice_in_pic_flag) {
@@ -683,6 +684,7 @@ static int hls_slice_header(HEVCContext *s)
     sh->no_output_of_prior_pics_flag = 0;
     if (IS_IRAP(s)){
         sh->no_output_of_prior_pics_flag = get_bits1(gb);
+        //printBitContext(gb);
         print_cabac("no_output_of_prior_pics_flag", sh->no_output_of_prior_pics_flag);
         if (s->decoder_id)
             av_log(s->avctx, AV_LOG_ERROR, "IRAP %d\n", s->nal_unit_type);
@@ -692,6 +694,7 @@ static int hls_slice_header(HEVCContext *s)
         sh->no_output_of_prior_pics_flag = 1;
 
     sh->pps_id = get_ue_golomb_long(gb);
+    //printBitContext(gb);
     print_cabac("slice_pic_parameter_set_id", sh->pps_id);
     if (sh->pps_id >= MAX_PPS_COUNT || !s->ps.pps_list[sh->pps_id]) {
         av_log(s->avctx, AV_LOG_ERROR, "PPS %d does not exist.\n", sh->pps_id);
@@ -747,12 +750,14 @@ static int hls_slice_header(HEVCContext *s)
 
         if (s->ps.pps->dependent_slice_segments_enabled_flag){
             sh->dependent_slice_segment_flag = get_bits1(gb);
+            //printBitContext(gb);
             print_cabac("dependent_slice_segment_flag", sh->dependent_slice_segment_flag);
         }
 
         slice_address_length = av_ceil_log2(s->ps.sps->ctb_width *
                                             s->ps.sps->ctb_height);
         sh->slice_segment_addr = get_bitsz(gb, slice_address_length);
+        //printBitContext(gb);
 #if PARALLEL_SLICE
         s1->slice_segment_addr[s->job] = sh->slice_segment_addr;
         ff_thread_report_progress_slice2(s->avctx, s->job);
@@ -798,23 +803,27 @@ else
             int iBits = 0;
             if(s->ps.pps->num_extra_slice_header_bits > iBits) {
                 sh->discardable_flag = get_bits1(gb);
+                //printBitContext(gb);
                 //uint8_t discardable_flag = get_bits1(gb);
-                print_cabac("discardable_flag  ", discardable_flag);
+                //print_cabac("discardable_flag  ", discardable_flag);
                 iBits++;
             }
             if(s->ps.pps->num_extra_slice_header_bits > iBits) {
                 sh->m_bCrossLayerBLAFlag = get_bits1(gb);
+                //printBitContext(gb);
                 print_cabac("cross_layer_bla_flag", sh->m_bCrossLayerBLAFlag);
                 iBits++;
             }
             if(s->ps.pps->num_extra_slice_header_bits > iBits) {
                 sh->m_bPocResetFlag = get_bits1(gb);
+                //printBitContext(gb);
                 print_cabac("slice_reserved_undetermined_flag", sh->m_bPocResetFlag);
                 iBits++;
             }
         }
 
         sh->slice_type = get_ue_golomb_long(gb);
+        //printBitContext(gb);
         print_cabac("slice_type", sh->slice_type);
         if (!(sh->slice_type == I_SLICE ||
               sh->slice_type == P_SLICE ||
@@ -832,11 +841,13 @@ else
         sh->pic_output_flag = 1;
         if (s->ps.pps->output_flag_present_flag) {
             sh->pic_output_flag = get_bits1(gb);
+            //printBitContext(gb);
             print_cabac("pic_output_flag", sh->pic_output_flag);
         }
 
         if (s->ps.sps->separate_colour_plane_flag) {
             sh->colour_plane_id = get_bits(gb, 2);
+            //printBitContext(gb);
             print_cabac("pic_output_flag", sh->pic_output_flag);
         }
         print_cabac("s->nal_unit_type", s->nal_unit_type);
@@ -846,6 +857,7 @@ else
             int poc;
 
             sh->pic_order_cnt_lsb = get_bits(gb, s->ps.sps->log2_max_poc_lsb);
+            //printBitContext(gb);
             print_cabac("pic_order_cnt_lsb", sh->pic_order_cnt_lsb);
             poc = ff_hevc_compute_poc(s, sh->pic_order_cnt_lsb);
             if (!sh->first_slice_in_pic_flag && poc != s->poc) {
@@ -869,8 +881,10 @@ else
         if(!IS_IDR(s)) {
             int pos;
             sh->short_term_ref_pic_set_sps_flag = get_bits1(gb);
+            //printBitContext(gb);
             pos = get_bits_left(gb);
-            print_cabac("short_term_ref_pic_set_sps_flag", short_term_ref_pic_set_sps_flag);
+            //printBitContext(gb);
+            print_cabac("short_term_ref_pic_set_sps_flag", sh->short_term_ref_pic_set_sps_flag);
             if (!sh->short_term_ref_pic_set_sps_flag) {
                 ret = ff_hevc_decode_short_term_rps(gb, s->avctx, &sh->slice_rps, s->ps.sps, 1);
                 if (ret < 0)
@@ -887,12 +901,15 @@ else
 
                 numbits = av_ceil_log2(s->ps.sps->num_short_term_rps);
                 rps_idx = numbits > 0 ? get_bits(gb, numbits) : 0;
+                //printBitContext(gb);
                 print_cabac("short_term_ref_pic_set_idx", rps_idx);
                 sh->short_term_rps = &s->ps.sps->st_rps[rps_idx];
             }
             sh->short_term_ref_pic_set_size = pos - get_bits_left(gb);
+            //printBitContext(gb);
 
             pos = get_bits_left(gb);
+            //printBitContext(gb);
             ret = decode_lt_rps(s, &sh->long_term_rps, gb);
             if (ret < 0) {
                 av_log(s->avctx, AV_LOG_WARNING, "Invalid long term RPS.\n");
@@ -900,9 +917,11 @@ else
                     return AVERROR_INVALIDDATA;
             }
             sh->long_term_ref_pic_set_size = pos - get_bits_left(gb);
+            //printBitContext(gb);
 
             if (s->ps.sps->sps_temporal_mvp_enabled_flag) {
                 sh->slice_temporal_mvp_enabled_flag = get_bits1(gb);
+                //printBitContext(gb);
                 print_cabac("slice_temporal_mvp_enable_flag", sh->slice_temporal_mvp_enabled_flag);
             } else
                 sh->slice_temporal_mvp_enabled_flag = 0;
@@ -927,6 +946,7 @@ else
 
         if (s->nuh_layer_id > 0 && !s->ps.vps->vps_ext.all_ref_layers_active_flag && NumILRRefIdx>0) {
             s->sh.inter_layer_pred_enabled_flag = get_bits1(gb);
+            //printBitContext(gb);
             print_cabac("inter_layer_pred_enabled_flag", s->sh.inter_layer_pred_enabled_flag );
             if (s->sh.inter_layer_pred_enabled_flag) {
                 if (NumILRRefIdx>1)  {
@@ -936,6 +956,7 @@ else
                     }
                     if (!s->ps.vps->vps_ext.max_one_active_ref_layer_flag) {
                         s->sh.active_num_ILR_ref_idx = get_bits(gb, numBits) + 1;
+                        //printBitContext(gb);
                         print_cabac("num_inter_layer_ref_pics_minus1", s->sh.active_num_ILR_ref_idx);
                     } else {
                         for(i=0 ; i < NumILRRefIdx; i++ ) {
@@ -952,6 +973,7 @@ else
                     } else
                         for (i = 0; i < s->sh.active_num_ILR_ref_idx; i++ ) {
                             s->sh.inter_layer_pred_layer_idc[i] =  get_bits(gb, numBits);
+                            //printBitContext(gb);
                             print_cabac("inter_layer_pred_layer_idc", s->sh.inter_layer_pred_layer_idc[i]);
                         }
                 } else {
@@ -982,6 +1004,7 @@ else
         if (s->ps.sps->sao_enabled_flag) {
             enum ChromaFormat format;
             sh->slice_sample_adaptive_offset_flag[0] = get_bits1(gb);
+            //printBitContext(gb);
             print_cabac("slice_sao_luma_flag", sh->slice_sample_adaptive_offset_flag[0]);
             if(!s->nuh_layer_id) {
                 format = s->ps.sps->chroma_format_idc;
@@ -992,6 +1015,7 @@ else
             if (format != CHROMA_400)  {
                 sh->slice_sample_adaptive_offset_flag[1] =
                 sh->slice_sample_adaptive_offset_flag[2] = get_bits1(gb);
+                //printBitContext(gb);
                 print_cabac("slice_sao_chroma_flag", sh->slice_sample_adaptive_offset_flag[2]);
             } else {
                 // sh->slice_sample_adaptive_offset_flag[0] = 0;
@@ -1008,12 +1032,15 @@ else
             if (sh->slice_type == B_SLICE)
                 sh->nb_refs[L1] = s->ps.pps->num_ref_idx_l1_default_active;
             num_ref_idx_active_override_flag = get_bits1(gb);
+            //printBitContext(gb);
             print_cabac("num_ref_idx_active_override_flag", num_ref_idx_active_override_flag);
             if (num_ref_idx_active_override_flag) { // num_ref_idx_active_override_flag
                 sh->nb_refs[L0] = get_ue_golomb_long(gb) + 1;
+                //printBitContext(gb);
                 print_cabac("num_ref_idx_l0_active_minus1", sh->nb_refs[L0] -1);
                 if (sh->slice_type == B_SLICE) {
                     sh->nb_refs[L1] = get_ue_golomb_long(gb) + 1;
+                    //printBitContext(gb);
                     print_cabac("num_ref_idx_l1_active_minus1", sh->nb_refs[L1]-1);
                 }
             }
@@ -1034,20 +1061,24 @@ else
             print_cabac("lists_modification_present_flag", s->ps.pps->lists_modification_present_flag);
             if (s->ps.pps->lists_modification_present_flag && nb_refs > 1) {
                 sh->rpl_modification_flag[0] = get_bits1(gb);
+                //printBitContext(gb);
                 print_cabac("ref_pic_list_modification_flag_l0", sh->rpl_modification_flag[0]);
                 if (sh->rpl_modification_flag[0]) {
                     for (i = 0; i < sh->nb_refs[L0]; i++) {
                         sh->list_entry_lx[0][i] = get_bits(gb, av_ceil_log2(nb_refs));
+                        //printBitContext(gb);
                         print_cabac("list_entry_l0", sh->list_entry_lx[0][i]);
                     }
                 }
 
                 if (sh->slice_type == B_SLICE) {
                     sh->rpl_modification_flag[1] = get_bits1(gb);
+                    //printBitContext(gb);
                     print_cabac("ref_pic_list_modification_flag_l1", sh->rpl_modification_flag[1]);
                     if (sh->rpl_modification_flag[1] == 1)
                         for (i = 0; i < sh->nb_refs[L1]; i++) {
                             sh->list_entry_lx[1][i] = get_bits(gb, av_ceil_log2(nb_refs));
+                            //printBitContext(gb);
                             print_cabac("list_entry_l1", sh->list_entry_lx[1][i]);
                         }
                 }
@@ -1055,11 +1086,13 @@ else
 
             if (sh->slice_type == B_SLICE) {
                 sh->mvd_l1_zero_flag = get_bits1(gb);
+                //printBitContext(gb);
                 print_cabac("mvd_l1_zero_flag", sh->mvd_l1_zero_flag);
             }
 
             if (s->ps.pps->cabac_init_present_flag) {
                 sh->cabac_init_flag = get_bits1(gb);
+                //printBitContext(gb);
                 print_cabac("cabac_init_flag", sh->cabac_init_flag);
             } else
                 sh->cabac_init_flag = 0;
@@ -1069,11 +1102,13 @@ else
                 sh->collocated_list = L0;
                 if (sh->slice_type == B_SLICE) {
                     sh->collocated_list = !get_bits1(gb);
+                    //printBitContext(gb);
                     print_cabac("collocated_from_l0_flag", sh->collocated_list);
                 }
 
                 if (sh->nb_refs[sh->collocated_list] > 1) {
                     sh->collocated_ref_idx = get_ue_golomb_long(gb);
+                    //printBitContext(gb);
                     print_cabac("collocated_ref_idx", sh->collocated_ref_idx);
                     if (sh->collocated_ref_idx >= sh->nb_refs[sh->collocated_list]) {
                         av_log(s->avctx, AV_LOG_ERROR,
@@ -1090,6 +1125,7 @@ else
             }
 
             sh->max_num_merge_cand = 5 - get_ue_golomb_long(gb);
+            //printBitContext(gb);
             print_cabac("five_minus_max_num_merge_cand", 5-sh->max_num_merge_cand);
             if (sh->max_num_merge_cand < 1 || sh->max_num_merge_cand > 5) {
                 av_log(s->avctx, AV_LOG_ERROR,
@@ -1100,20 +1136,24 @@ else
         }
 
         sh->slice_qp_delta = get_se_golomb(gb);
+        //printBitContext(gb);
         print_cabac("slice_qp_delta", sh->slice_qp_delta);
         if (s->ps.pps->pps_slice_chroma_qp_offsets_present_flag) {
             sh->slice_cb_qp_offset = get_se_golomb(gb);
+            //printBitContext(gb);
             print_cabac("slice_qp_delta_cb", sh->slice_cb_qp_offset);
             sh->slice_cr_qp_offset = get_se_golomb(gb);
+            //printBitContext(gb);
             print_cabac("slice_qp_delta_cr", sh->slice_cr_qp_offset);
         } else {
             sh->slice_cb_qp_offset = 0;
             sh->slice_cr_qp_offset = 0;
         }
 
-        if (s->ps.pps->chroma_qp_offset_list_enabled_flag)
+        if (s->ps.pps->chroma_qp_offset_list_enabled_flag){
             sh->cu_chroma_qp_offset_enabled_flag = get_bits1(gb);
-        else
+            //printBitContext(gb);
+        } else
             sh->cu_chroma_qp_offset_enabled_flag = 0;
 
         if (s->ps.pps->deblocking_filter_control_present_flag) {
@@ -1121,16 +1161,20 @@ else
 
             if (s->ps.pps->deblocking_filter_override_enabled_flag) {
                 deblocking_filter_override_flag = get_bits1(gb);
+                //printBitContext(gb);
                 print_cabac("deblocking_filter_override_flag", deblocking_filter_override_flag);
             }
 
             if (deblocking_filter_override_flag) {
                 sh->disable_deblocking_filter_flag = get_bits1(gb);
+                //printBitContext(gb);
                 print_cabac("slice_disable_deblocking_filter_flag", sh->disable_deblocking_filter_flag);
                 if (!sh->disable_deblocking_filter_flag) {
                     sh->beta_offset = get_se_golomb(gb) * 2;
+                    //printBitContext(gb);
                     print_cabac("slice_beta_offset_div2", sh->beta_offset);
                     sh->tc_offset   = get_se_golomb(gb) * 2;
+                    //printBitContext(gb);
                     print_cabac("slice_tc_offset_div2", sh->tc_offset);
                 }
             } else {
@@ -1149,6 +1193,7 @@ else
              sh->slice_sample_adaptive_offset_flag[1] ||
              !sh->disable_deblocking_filter_flag)) {
             sh->slice_loop_filter_across_slices_enabled_flag = get_bits1(gb);
+            //printBitContext(gb);
             print_cabac("slice_loop_filter_across_slices_enabled_flag", sh->slice_loop_filter_across_slices_enabled_flag);
         } else {
             sh->slice_loop_filter_across_slices_enabled_flag = s->ps.pps->pps_loop_filter_across_slices_enabled_flag;
@@ -1161,6 +1206,7 @@ else
     sh->num_entry_point_offsets = 0;
     if (s->ps.pps->tiles_enabled_flag || s->ps.pps->entropy_coding_sync_enabled_flag) {
         sh->num_entry_point_offsets = get_ue_golomb_long(gb);
+        //printBitContext(gb);
         print_cabac("num_entry_point_offsets", sh->num_entry_point_offsets);
         if(s->ps.pps->entropy_coding_sync_enabled_flag) {
             if(sh->num_entry_point_offsets < 0) {
@@ -1181,6 +1227,7 @@ else
         }
         if (sh->num_entry_point_offsets > 0) {
             int offset_len = get_ue_golomb_long(gb) + 1;
+            //printBitContext(gb);
             int segments = offset_len >> 4;
             int rest = (offset_len & 15);
             print_cabac("offset_len_minus1", offset_len-1);
@@ -1200,10 +1247,12 @@ else
                 for (j = 0; j < segments; j++) {
                     val <<= 16;
                     val += get_bits(gb, 16);
+                    //printBitContext(gb);
                 }
                 if (rest) {
                     val <<= rest;
                     val += get_bits(gb, rest);
+                    //printBitContext(gb);
                 }
                 sh->entry_point_offset[i] = val + 1; // +1; // +1 to get the size
                 print_cabac("entry_point_offset_minus1", sh->entry_point_offset[i] - 1);
@@ -1219,16 +1268,19 @@ else
 
     if (s->ps.pps->slice_segment_header_extension_present_flag) {
         unsigned int length = get_ue_golomb_long(gb);
+        //printBitContext(gb);
         if (length*8LL > get_bits_left(gb)) {
             av_log(s->avctx, AV_LOG_ERROR, "too many slice_header_extension_data_bytes\n");
             return AVERROR_INVALIDDATA;
         }
+        //printBitContext(gb);
         print_cabac("slice_header_extension_length", length);
         av_log(s->avctx, AV_LOG_WARNING,
                "========= SLICE HEADER extension not supported yet\n");
         for (i = 0; i < length; i++)
             skip_bits(gb, 8);  // slice_header_extension_data_byte
     }
+    //printBitContext(gb);
 
     // Inferred parameters
     sh->slice_qp = 26U + s->ps.pps->init_qp_minus26 + sh->slice_qp_delta;
@@ -1254,6 +1306,7 @@ else
                "Overread slice header by %d bits\n", -get_bits_left(gb));
         return AVERROR_INVALIDDATA;
     }
+    //printBitContext(gb);
 
     s->HEVClc->first_qp_group = !s->sh.dependent_slice_segment_flag;
 

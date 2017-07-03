@@ -120,6 +120,7 @@
                    (s)->nal_unit_type == NAL_BLA_N_LP)
 #define IS_IRAP(s) ((s)->nal_unit_type >= 16 && (s)->nal_unit_type <= 23)
 
+
 #if COM16_C806_EMT
 enum EMT_DCTTransformType {
     DCT_II = 0,
@@ -171,7 +172,7 @@ enum NALUnitType {
     NAL_SEI_PREFIX = 39,
     NAL_SEI_SUFFIX = 40,
 };
-#if 0
+#if 1
 #define print_cabac(string, val) \
     printf(" %s : %d \n", string, val);
 #else

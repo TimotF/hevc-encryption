@@ -70,6 +70,13 @@ static const AVRational vui_sar[] = {
     {  2,   1 },
 };
 
+static void printBitContext(GetBitContext *gb){
+    int index;
+    for(index = 0; index<(gb->buffer_end-gb->buffer); index++){
+        printf("%02x ",gb->buffer[index]);
+    }
+}
+
 static void remove_pps(HEVCParamSets *s, int id)
 {
     if (s->pps_list[id] && s->pps == (const HEVCPPS*)s->pps_list[id]->data)
@@ -879,7 +886,7 @@ static void parse_vps_extension (GetBitContext *gb, AVCodecContext *avctx, HEVCV
     HEVCVPSExt      *Hevc_VPS_Ext   = &vps->vps_ext;
     int NumOutputLayersInOutputLayerSet[16],  layerSetIdxForOutputLayerSet;
     int vps_non_vui_extension_length, vps_vui_present_flag;
-    print_cabac(" \n --- parse vps extention  --- \n ", s->nuh_layer_id);
+    //print_cabac(" \n --- parse vps extention  --- \n ", s->nuh_layer_id);
 
     if( vps->vps_max_layers > 1  &&  vps->vps_base_layer_internal_flag )
         //profile_tier_level(gb, avctx, 0, &Hevc_VPS_Ext->ptl[0], vps->vps_max_sub_layers);
@@ -1138,6 +1145,7 @@ static void parse_vps_extension (GetBitContext *gb, AVCodecContext *avctx, HEVCV
 int ff_hevc_decode_nal_vps(GetBitContext *gb, AVCodecContext *avctx,
                            HEVCParamSets *ps)
 {
+    printBitContext(gb);
     int i,j;
     HEVCVPS *vps;
     AVBufferRef *vps_buf = av_buffer_allocz(sizeof(*vps));
@@ -1162,7 +1170,6 @@ int ff_hevc_decode_nal_vps(GetBitContext *gb, AVCodecContext *avctx,
     vps->vps_nonHEVCBaseLayerFlag = (vps->vps_base_layer_available_flag && !vps->vps_base_layer_internal_flag);
     
     print_cabac("vps_base_layer_internal_flag",  vps->vps_base_layer_internal_flag);
-    print_cabac("vps_base_layer_available_flag", vps->vps_base_layer_available_flag);
     print_cabac("vps_base_layer_available_flag", vps->vps_base_layer_available_flag);
 
     vps->vps_max_layers               = get_bits(gb, 6) + 1;
@@ -2807,7 +2814,7 @@ int ff_hevc_decode_nal_pps(GetBitContext *gb, AVCodecContext *avctx,
 
     uint8_t pps_extension_present_flag;
 
-    print_cabac(" --- parse pps --- ", s->nuh_layer_id);
+    //print_cabac(" --- parse pps --- ", s->nuh_layer_id);
 
     if (!pps)
         return AVERROR(ENOMEM);
