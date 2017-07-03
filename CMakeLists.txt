@@ -417,6 +417,12 @@ set(libfilenames
 
 # openHEVC wrapper
     gpac/modules/openhevc_dec/openHevcWrapper.c
+
+# libkvz
+    libkvz/cabac.c
+    libkvz/bitstream.c
+    libkvz/extras/crypto.cpp
+
 )
 if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "armv7l")
 list(APPEND libfilenames
