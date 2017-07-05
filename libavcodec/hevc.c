@@ -210,12 +210,12 @@ fail:
     return AVERROR(ENOMEM);
 }
 
-static void printBitContext(GetBitContext *gb){
-    int index;
-    for(index = 0; index<(gb->index); index++){
-        printf("%02x ",gb->buffer[index]);
-    }
-}
+// static void printBitContext(GetBitContext *gb){
+//     int index;
+//     for(index = 0; index<(gb->index); index++){
+//         printf("%02x ",gb->buffer[index]);
+//     }
+// }
 
 static void pred_weight_table(HEVCContext *s, GetBitContext *gb)
 {
@@ -632,7 +632,7 @@ int set_el_parameter(HEVCContext *s) {
 
 static int hls_slice_header(HEVCContext *s)
 {
-    printf("hls_slice_header\n");
+    //printf("hls_slice_header\n");
     GetBitContext *gb = &s->HEVClc->gb;
     SliceHeader *sh   = &s->sh;
 //#if PARALLEL_SLICE

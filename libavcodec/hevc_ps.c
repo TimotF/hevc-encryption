@@ -70,12 +70,12 @@ static const AVRational vui_sar[] = {
     {  2,   1 },
 };
 
-static void printBitContext(GetBitContext *gb){
-    int index;
-    for(index = 0; index<(gb->buffer_end-gb->buffer); index++){
-        printf("%02x ",gb->buffer[index]);
-    }
-}
+// static void printBitContext(GetBitContext *gb){
+//     int index;
+//     for(index = 0; index<(gb->buffer_end-gb->buffer); index++){
+//         printf("%02x ",gb->buffer[index]);
+//     }
+// }
 
 static void remove_pps(HEVCParamSets *s, int id)
 {
