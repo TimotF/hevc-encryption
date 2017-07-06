@@ -166,7 +166,7 @@ void ff_init_cabac_encoder(CABACContext *c, uint8_t *buf, int buf_size){
 
     c->low= 0;
     c->range= 0x1FE;
-    c->outstanding_count= 0;
+    c->outstanding_count = 0; // By default, write bits out
     c->pb.bit_left++; //avoids firstBitFlag
 }
 
