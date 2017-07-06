@@ -218,6 +218,7 @@ int parse_enum_args(const char *context, const char *enumstr, char *name,
 
 
     int valToReturn = 0;
+    
 
 #define OPT(STR) (!strcmp(name, STR))
     if OPT("crypto")
@@ -230,6 +231,10 @@ int parse_enum_args(const char *context, const char *enumstr, char *name,
         const char *cur = token_begin;
 
         valToReturn = HEVC_CRYPTO_OFF;
+
+        // if arg is empty, disable crypto
+        if (!strcmp(enumstr, ""))
+            return HEVC_CRYPTO_OFF;
 
         // If value is on or off, set all features to on or off.
         int8_t toggle = 0;
