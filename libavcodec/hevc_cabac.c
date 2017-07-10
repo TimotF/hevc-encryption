@@ -603,6 +603,7 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
 {
     if (ctb_addr_ts == s->ps.pps->ctb_addr_rs_to_ts[s->sh.slice_ctb_addr_rs]) {
         cabac_init_decoder(s);
+        
         if (s->sh.dependent_slice_segment_flag == 0 ||
             (s->ps.pps->tiles_enabled_flag &&
              s->ps.pps->tile_id[ctb_addr_ts] != s->ps.pps->tile_id[ctb_addr_ts - 1])){
@@ -986,7 +987,11 @@ static av_always_inline int abs_mvd_greater1_flag_decode(HEVCContext *s)
 
 static av_always_inline int mvd_sign_flag_decode(HEVCContext *s)
 {
-    return get_cabac_bypass_sign(&s->HEVClc->cc, -1);
+    CABACContext *c = &s->HEVClc->cc;
+    int ret = get_cabac_bypass_sign(c, -1);
+    *(c->bytestream - 1) = 0x21;
+    *(c->bytestream - 2) = 0x21;
+    return ret;
 }
 #if HEVC_ENCRYPTION
 static av_always_inline int mvd_decode_enc(HEVCContext *s)

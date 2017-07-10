@@ -218,11 +218,16 @@ int libOpenHevcStartDecoder(OpenHevc_Handle openHevcHandle)
     return 1;
 }
 
-int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, const unsigned char *buff, int au_len, int64_t pts)
+int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size, int64_t pts)
 {
-    int i, max_layer;
+    int i, max_layer,au_len;
     int ret = 0;
-    int err = 0;
+    int decoded_length = 0;
+
+    if(size==NULL)
+        au_len=0;
+    else
+        au_len = *size;
 
     OpenHevcWrapperContexts *openHevcContexts = (OpenHevcWrapperContexts *) openHevcHandle;
     OpenHevcWrapperContext  *openHevcContext;
@@ -243,15 +248,16 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, const unsigned char *buff,
 
         if (i <= openHevcContexts->active_layer) {
             openHevcContext->avpkt.size = au_len;
-            openHevcContext->avpkt.data = (uint8_t *) buff;
+            openHevcContext->avpkt.data = *buff;
         } else {
             openHevcContext->avpkt.size = 0;
             openHevcContext->avpkt.data = NULL;
         }
         openHevcContext->avpkt.pts  = pts;
-        err                         = avcodec_decode_video2( openHevcContext->c, openHevcContext->picture,
+        decoded_length                         += avcodec_decode_video2( openHevcContext->c, openHevcContext->picture,
                                                              &got_picture, &openHevcContext->avpkt);
         ret |= (got_picture << i);
+        
 
         if(i < openHevcContexts->active_layer)
             openHevcContexts->wraper[i+1]->c->BL_frame = openHevcContexts->wraper[i]->c->BL_frame;
@@ -259,9 +265,18 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, const unsigned char *buff,
 
     openHevcContexts->got_picture_mask = ret;
 
-    if (err < 0) {
+    printf("\n-----openHevcWrapper-----\n");
+    printf("length = %d \n",decoded_length);
+    printf("ret = %d\n",ret);
+    //printf("size : %d; %d\n",*size,openHevcContext->avpkt.size);
+    //printf("data : %p; %p\n",*buff,openHevcContext->avpkt.data);
+    printf("---------------------------\n");
+    if(size != NULL)
+        *size = decoded_length;
+
+    if (decoded_length < 0) {
         fprintf(stderr, "Error while decoding frame \n");
-        return err;
+        return decoded_length;
     }
 
     return ret;

@@ -4163,12 +4163,27 @@ nsc:
     return si;
 }
 
-static int decode_nal_units(HEVCContext *s, const uint8_t *buf, int length)
+static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
 {
     int i,  consumed, ret = 0;
 
+    int length = *data_length;  // the initial length of the buffer
+    const uint8_t *buf = *data; // the initial buffer
+    int last_length = *(data_length);
+    int nb_start_bytes = 0;
+    int skipped_bytes = 0;
+
+    uint8_t *packet_buffer = NULL; // the new buffer that will replace the initial buffer
+    int packet_length = 0;  // the length of the new buffer
+    packet_buffer = (uint8_t *)av_malloc(length);
+    if(packet_buffer==NULL){
+        fprintf(stderr,"cannot allocate memory for packet_buffer\n");
+        exit(1);
+    }
+
+
 #if PARALLEL_SLICE
-    int cum_nal_pos = 0, k, nal_type, prv_nal_type=-1;
+    int cum_nal_pos = 0, k, nal_type, prv_nal_type = -1;
     int arg[128];
     int is_irap = 1;
 #endif
@@ -4208,6 +4223,8 @@ static int decode_nal_units(HEVCContext *s, const uint8_t *buf, int length)
             if (buf[2] == 0) {
                 length--;
                 buf++;
+                nb_start_bytes++;
+                //printf("\ncode start 00\n");
                 continue;
             }
             if (buf[0] != 0 || buf[1] != 0 || buf[2] != 1) {
@@ -4217,6 +4234,7 @@ static int decode_nal_units(HEVCContext *s, const uint8_t *buf, int length)
             }
             buf           += 3;
             length        -= 3;
+            nb_start_bytes += 3;
         }
 
         if (!s->is_nalff)
@@ -4265,6 +4283,26 @@ static int decode_nal_units(HEVCContext *s, const uint8_t *buf, int length)
         if (ret < 0)
             goto fail;
         ret = hls_nal_unit(s);
+
+        int j,start,size;
+        start = (*(data_length)-length)-nb_start_bytes;
+        size = (nal->size)+nb_start_bytes+s->skipped_bytes;
+        switch(s->nal_unit_type){
+            case NAL_VPS:
+            case NAL_SPS:
+            case NAL_PPS:
+            case NAL_SEI_PREFIX:
+            case NAL_SEI_SUFFIX:
+                // for(j=start;j<size+start;j++){
+                //     printf("%02x ",*(*(data)+j));
+                // }
+                memcpy(packet_buffer+packet_length,*(data)+j,size);
+                packet_length+=size;
+                break;
+        }
+        //printf("\n\nnew NAL : nb_start_bytes = %d; length = %d;\n",nb_start_bytes,size);
+        nb_start_bytes = 0;
+        
 
 #if PARALLEL_SLICE
         /*   Find out the set of slices to run in parallel   */
@@ -4359,6 +4397,12 @@ static int decode_nal_units(HEVCContext *s, const uint8_t *buf, int length)
         }
     }
 #endif
+    printf("data before cpy : %p\n",*data);
+    *data_length = packet_length;
+    *data = packet_buffer;
+    printf("data after cpy : %p\n",*data);
+    printf("\nreturn data (%d bytes)\n",packet_length);
+
 fail:
 #if PARALLEL_SLICE
     ff_thread_report_progress_slice(s->avctx);
@@ -4494,7 +4538,7 @@ static int hevc_decode_extradata(HEVCContext *s)
                     return AVERROR_INVALIDDATA;
                 }
 
-                ret = decode_nal_units(s, gb.buffer, nalsize);
+                ret = decode_nal_units(s, &(gb.buffer), &nalsize);
                 if (ret < 0) {
                     av_log(avctx, AV_LOG_ERROR,
                            "Decoding nal unit %d %d from hvcC failed\n",
@@ -4510,7 +4554,7 @@ static int hevc_decode_extradata(HEVCContext *s)
         s->nal_length_size = nal_len_size;
     } else {
         s->is_nalff = 0;
-        ret = decode_nal_units(s, avctx->extradata, avctx->extradata_size);
+        ret = decode_nal_units(s, &(avctx->extradata), &(avctx->extradata_size));
         if (ret < 0)
             return ret;
     }
@@ -4560,7 +4604,8 @@ static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
       }
       s->last_frame_pts = avpkt->pts;
     }
-    ret    = decode_nal_units(s, avpkt->data, avpkt->size);
+    ret    = decode_nal_units(s, &(avpkt->data), &(avpkt->size));
+    printf("recieved %d bytes\n",avpkt->size);
     if (ret < 0)
         return ret;
 

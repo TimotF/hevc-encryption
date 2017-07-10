@@ -311,12 +311,12 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                 || stop_dec == 1 || stop_dec2 == 1)
             {
                 /* Try to decode corresponding packets into AVFrames
-		 * */
+		 * */   printf("size and address of packet before decoding : %d\t%p\n",packet[0].size,packet[0].data);
                 if (split_layers)
                     got_picture = libOpenShvcDecode2(openHevcHandle, packet[0].data, packet[1].data, !stop_dec ? packet[0].size : 0, !stop_dec2 ? packet[1].size : 0, packet[0].pts, packet[1].pts);
                 else
-                    got_picture = libOpenHevcDecode(openHevcHandle, packet[0].data, !stop_dec ? packet[0].size : 0, packet[0].pts);
-
+                    got_picture = libOpenHevcDecode(openHevcHandle, &(packet[0].data), !stop_dec ? &(packet[0].size) : NULL, packet[0].pts);
+                printf("size and address of packet after decoding : %d\t%p\n",packet[0].size,packet[0].data);
                 /* Output and display handling
 			 * */
                 if (got_picture > 0)
@@ -357,6 +357,7 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                         //int format = openHevcFrameCpy.frameInfo.chromat_format == YUV420 ? 1 : 0;
                         //libOpenHevcGetOutputCpy(openHevcHandle, 1, &openHevcFrameCpy);
                         fwrite(packet[0].data, packet[0].size, 1, fout);
+                        printf("writing %d bytes in fout\n",packet[0].size);
                     }
                     nbFrame++;
 
