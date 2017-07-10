@@ -268,6 +268,10 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size,
     printf("\n-----openHevcWrapper-----\n");
     printf("length = %d \n",decoded_length);
     printf("ret = %d\n",ret);
+    for(i=0;i<decoded_length;i++){
+        printf("%02x ",*(*buff+i));
+    }
+    printf("\n");
     //printf("size : %d; %d\n",*size,openHevcContext->avpkt.size);
     //printf("data : %p; %p\n",*buff,openHevcContext->avpkt.data);
     printf("---------------------------\n");

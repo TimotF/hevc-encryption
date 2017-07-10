@@ -4166,20 +4166,22 @@ nsc:
 static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
 {
     int i,  consumed, ret = 0;
-
-    int length = *data_length;  // the initial length of the buffer
-    const uint8_t *buf = *data; // the initial buffer
-    int last_length = *(data_length);
     int nb_start_bytes = 0;
     int skipped_bytes = 0;
 
-    uint8_t *packet_buffer = NULL; // the new buffer that will replace the initial buffer
-    int packet_length = 0;  // the length of the new buffer
-    packet_buffer = (uint8_t *)av_malloc(length);
-    if(packet_buffer==NULL){
-        fprintf(stderr,"cannot allocate memory for packet_buffer\n");
+    int length = *data_length;  // the initial length of the buffer
+
+    uint8_t *buf = NULL; // copy of the initial buffer 
+    buf = (uint8_t*)av_malloc(length);
+    if(buf==NULL){
+        fprintf(stderr,"cannot allocate memory for buf\n");
         exit(1);
     }
+    buf = memcpy(buf,*data,length);
+    uint8_t *initial_buf = buf; // pointer to the buf
+
+    uint8_t *packet_buffer = *data; // the new buffer that will replace the initial data
+    int packet_length = 0;  // the length of the new buffer
 
 
 #if PARALLEL_SLICE
@@ -4293,10 +4295,13 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
             case NAL_PPS:
             case NAL_SEI_PREFIX:
             case NAL_SEI_SUFFIX:
-                // for(j=start;j<size+start;j++){
-                //     printf("%02x ",*(*(data)+j));
-                // }
-                memcpy(packet_buffer+packet_length,*(data)+j,size);
+                printf("\ncopy of %d bytes in buf (sizeof(buf)=%d)\n",size,packet_length);
+                for(j=start;j<size+start;j++){
+                    printf("%02x ",*(initial_buf+j));
+                }
+                //TODO realloc if length is less than packet_length+size
+                //printf("\ncopy of %d bytes in buf (sizeof(buf)=%d)\n",size,packet_length);
+                memcpy(packet_buffer+packet_length,initial_buf+start,size);
                 packet_length+=size;
                 break;
         }
@@ -4397,13 +4402,12 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         }
     }
 #endif
-    printf("data before cpy : %p\n",*data);
+
     *data_length = packet_length;
-    *data = packet_buffer;
-    printf("data after cpy : %p\n",*data);
     printf("\nreturn data (%d bytes)\n",packet_length);
 
 fail:
+    av_free(initial_buf);
 #if PARALLEL_SLICE
     ff_thread_report_progress_slice(s->avctx);
     ff_thread_report_progress_slice2(s->avctx, s->job);
