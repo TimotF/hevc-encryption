@@ -4226,7 +4226,6 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
                 length--;
                 buf++;
                 nb_start_bytes++;
-                //printf("\ncode start 00\n");
                 continue;
             }
             if (buf[0] != 0 || buf[1] != 0 || buf[2] != 1) {
@@ -4295,17 +4294,12 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
             case NAL_PPS:
             case NAL_SEI_PREFIX:
             case NAL_SEI_SUFFIX:
-                printf("\ncopy of %d bytes in buf (sizeof(buf)=%d)\n",size,packet_length);
-                for(j=start;j<size+start;j++){
-                    printf("%02x ",*(initial_buf+j));
-                }
-                //TODO realloc if length is less than packet_length+size
-                //printf("\ncopy of %d bytes in buf (sizeof(buf)=%d)\n",size,packet_length);
+                if(*data_length<packet_length+size)
+                    packet_buffer = av_realloc(packet_buffer,packet_length+size);
                 memcpy(packet_buffer+packet_length,initial_buf+start,size);
-                packet_length+=size;
+                packet_length += size;
                 break;
         }
-        //printf("\n\nnew NAL : nb_start_bytes = %d; length = %d;\n",nb_start_bytes,size);
         nb_start_bytes = 0;
         
 
@@ -4404,7 +4398,7 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
 #endif
 
     *data_length = packet_length;
-    printf("\nreturn data (%d bytes)\n",packet_length);
+    *data = packet_buffer;
 
 fail:
     av_free(initial_buf);
@@ -4595,6 +4589,16 @@ static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
         return 0;
     }
 
+    uint8_t *data_buffer = NULL;
+    int data_buffer_size = avpkt->size;
+    data_buffer = (uint8_t*)av_malloc(avpkt->size);
+    if(data_buffer==NULL){
+        fprintf(stderr,"error of allocation for data_buffer\n");
+        exit(1);
+    }
+    memcpy(data_buffer,avpkt->data,avpkt->size);
+    //TODO : envoyer buffer pour le traitement, puis agrandir avpkt->data puis recopier data ou unref avpkt et remplacer par un nouveau pkt from data
+
     s->ref = NULL;
 #if PARALLEL_SLICE
     ff_thread_set_slice_flag(avctx, 0);
@@ -4608,10 +4612,20 @@ static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
       }
       s->last_frame_pts = avpkt->pts;
     }
-    ret    = decode_nal_units(s, &(avpkt->data), &(avpkt->size));
-    printf("recieved %d bytes\n",avpkt->size);
+    ret    = decode_nal_units(s, &data_buffer, &data_buffer_size);
     if (ret < 0)
         return ret;
+
+    int grow_pkt_size = data_buffer_size - avpkt->size;
+    if(grow_pkt_size>0){
+        printf("need to allocate %d bytes\n",grow_pkt_size);
+        ret = av_grow_packet(avpkt,grow_pkt_size);
+        if (ret < 0)
+            return ret;
+    }
+    memcpy(avpkt->data,data_buffer,data_buffer_size);
+    av_free(data_buffer);
+
 
     /* verify the SEI checksum */
     if (s->decode_checksum_sei && s->is_decoded) {
@@ -4654,7 +4668,7 @@ static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
     }
     av_log(s->avctx, AV_LOG_DEBUG, "frame end %d\n", s->decoder_id);
 
-    return avpkt->size;
+    return data_buffer_size;
 }
 
 

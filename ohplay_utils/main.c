@@ -311,12 +311,12 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                 || stop_dec == 1 || stop_dec2 == 1)
             {
                 /* Try to decode corresponding packets into AVFrames
-		 * */   printf("size and address of packet before decoding : %d\t%p\n",packet[0].size,packet[0].data);
+		    * */   
                 if (split_layers)
                     got_picture = libOpenShvcDecode2(openHevcHandle, packet[0].data, packet[1].data, !stop_dec ? packet[0].size : 0, !stop_dec2 ? packet[1].size : 0, packet[0].pts, packet[1].pts);
                 else
                     got_picture = libOpenHevcDecode(openHevcHandle, &(packet[0].data), !stop_dec ? &(packet[0].size) : NULL, packet[0].pts);
-                printf("size and address of packet after decoding : %d\t%p\n",packet[0].size,packet[0].data);
+                //printf("avpacket internal offset = %d\n",packet[0].)
                 /* Output and display handling
 			 * */
                 if (got_picture > 0)
@@ -385,15 +385,18 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                     fprintf(stderr, "Error when reading first frame\n");
                     exit(1);
                 }
+                printf("packet done\n");
             } // End of got_packet
     } //End of main loop
 
+    printf("file done\n");
     time = oh_timer_getTimeMs()/1000.0;
     oh_display_close();
 
     if (fout) {
         fclose(fout);
     }
+    printf("closing file\n");
     if(!split_layers)
         avformat_close_input(&pFormatCtx[0]);
     if(split_layers){

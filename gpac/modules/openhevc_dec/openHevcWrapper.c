@@ -261,22 +261,28 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size,
 
         if(i < openHevcContexts->active_layer)
             openHevcContexts->wraper[i+1]->c->BL_frame = openHevcContexts->wraper[i]->c->BL_frame;
+
+        if(i <= openHevcContexts->active_layer){
+            printf("\n-----openHevcWrapper-----\n");
+            printf("address of the original buffer : %p (size = %d)\n",*buff,*size);
+            printf("new address for the data : %p (size = %d)\n",openHevcContext->avpkt.data,openHevcContext->avpkt.size);
+            printf("length = %d \n",decoded_length);
+            for(i=0;i<decoded_length;i++){
+                printf("%02x ",*(openHevcContext->avpkt.data+i));
+            }
+            printf("\n");
+            //printf("size : %d; %d\n",*size,openHevcContext->avpkt.size);
+            //printf("data : %p; %p\n",*buff,openHevcContext->avpkt.data);
+            printf("---------------------------\n");
+            //TODO : qqch de plus propre
+            if(size != NULL)
+                *size = decoded_length;
+            if(buff!=NULL)
+                *buff = openHevcContext->avpkt.data;
+        }
     }
 
     openHevcContexts->got_picture_mask = ret;
-
-    printf("\n-----openHevcWrapper-----\n");
-    printf("length = %d \n",decoded_length);
-    printf("ret = %d\n",ret);
-    for(i=0;i<decoded_length;i++){
-        printf("%02x ",*(*buff+i));
-    }
-    printf("\n");
-    //printf("size : %d; %d\n",*size,openHevcContext->avpkt.size);
-    //printf("data : %p; %p\n",*buff,openHevcContext->avpkt.data);
-    printf("---------------------------\n");
-    if(size != NULL)
-        *size = decoded_length;
 
     if (decoded_length < 0) {
         fprintf(stderr, "Error while decoding frame \n");
