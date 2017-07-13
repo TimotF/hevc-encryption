@@ -575,6 +575,18 @@ static void cabac_init_decoder(HEVCContext *s)
                           (get_bits_left(gb) + 7) / 8);
 }
 
+static void cabac_init_encoder(HEVCContext *s)
+{
+    uint8_t *buffer = NULL;
+    int size = s->Hevclc->gb.size_in_bits_plus8 / 8;
+    buffer = (uint8_t*)av_malloc(size);
+    if(!buffer){
+        fprintf(stderr,"Error while allicating PutBitContext buffer\n");
+        exit(1);
+    }
+    ff_init_cabac_encoder(&s->HEVClc->ccc,buffer,size);
+}
+
 static void cabac_init_state(HEVCContext *s)
 {
     int init_type = 2 - s->sh.slice_type;
@@ -603,6 +615,10 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
 {
     if (ctb_addr_ts == s->ps.pps->ctb_addr_rs_to_ts[s->sh.slice_ctb_addr_rs]) {
         cabac_init_decoder(s);
+
+#if HEVC_DECRYPT
+        cabac_init_encoder(s);
+#endif
         
         if (s->sh.dependent_slice_segment_flag == 0 ||
             (s->ps.pps->tiles_enabled_flag &&
@@ -635,6 +651,10 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
                 cabac_reinit(s->HEVClc);
             else
                 cabac_init_decoder(s);
+
+#if HEVC_DECRYPT
+            cabac_init_encoder(s);
+#endif
             cabac_init_state(s);
 #if HEVC_ENCRYPTION
             if (s->tile_table_encry[s->ps.pps->tile_id[ctb_addr_ts]]){
@@ -653,6 +673,10 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
                         cabac_reinit(s->HEVClc);
                     else
                         cabac_init_decoder(s);
+
+#if HEVC_DECRYPT
+                        cabac_init_encoder(s);
+#endif
 
                     if (s->ps.pps->tile_width[ctb_addr_ts] == 1)
                         cabac_init_state(s);

@@ -1352,6 +1352,10 @@ typedef struct HEVCLocalContext {
     GetBitContext gb;
     CABACContext cc;
 
+#if HEVC_DECRYPT
+    CABACContext ccc;   //cabac context for hevc crypto (decryption/encryption)
+#endif //HEVC_DECRYPT
+
     int8_t qp_y;
     int8_t curr_qp_y;
 
@@ -1606,6 +1610,7 @@ typedef struct HEVCContext {
     uint8_t prev_num_tile_columns;
     uint8_t *tile_table_encry;
 #endif
+
 } HEVCContext;
 
 int ff_hevc_decode_short_term_rps(GetBitContext *gb, AVCodecContext *avctx,
