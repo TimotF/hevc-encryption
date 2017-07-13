@@ -559,3 +559,37 @@ void kvz_cabac_write_ep_ex_golomb(struct encoder_state_t * const state, cabac_da
   }
   kvz_cabac_encode_bins_ep(data, bins, num_bins);
 }
+
+/**
+ * \brief
+ */
+void kvz_cabac_write_ep_ex_golomb2(cabac_data_t *const data, uint32_t symbol, uint32_t count)
+{
+  uint32_t bins = 0;
+  int32_t num_bins = 0;
+
+  while (symbol >= (uint32_t)(1 << count))
+  {
+    bins = 2 * bins + 1;
+    ++num_bins;
+    symbol -= 1 << count;
+    ++count;
+  }
+  bins = 2 * bins;
+  ++num_bins;
+
+  bins = (bins << count) | symbol;
+  num_bins += count;
+  /*if (!state->cabac.only_count)
+  {
+    if (state->encoder_control->cfg.crypto_features & KVZ_CRYPTO_MVs)
+    {
+      uint32_t key, mask;
+      key = kvz_crypto_get_key(state->crypto_hdl, num_bins >> 1);
+      mask = ((1 << (num_bins >> 1)) - 1);
+      state->crypto_prev_pos = (bins + (state->crypto_prev_pos ^ key)) & mask;
+      bins = ((bins >> (num_bins >> 1)) << (num_bins >> 1)) | state->crypto_prev_pos;
+    }
+  }*/
+  kvz_cabac_encode_bins_ep(data, bins, num_bins);
+}
