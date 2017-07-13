@@ -1183,7 +1183,7 @@ coeff_scan_order_t kvz_get_scan_order(int8_t cu_type, int intra_mode, int depth)
     }
   }
 
-  return SCAN_DIAG;
+  return SCAN_DIA;
 }
 
 lcu_stats_t* kvz_get_lcu_stats(encoder_state_t *state, int lcu_x, int lcu_y)

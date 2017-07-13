@@ -697,7 +697,7 @@ static INLINE uint8_t intra_mode_encryption(encoder_state_t * const state,
 
     keybits = kvz_crypto_get_key(state->crypto_hdl, 5);
 
-    scan_dir = SCAN_DIAG;
+    scan_dir = SCAN_DIA;
     if (intra_pred_mode > 5  && intra_pred_mode < 15) {
       scan_dir = SCAN_VER;
     }

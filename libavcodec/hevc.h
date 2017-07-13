@@ -1355,6 +1355,7 @@ typedef struct HEVCLocalContext {
     CABACContext cc;
 
 #if HEVC_DECRYPT
+    bitstream_t stream;
     cabac_data_t ccc; //cabac context for hevc crypto (decryption/encryption)
 #endif //HEVC_DECRYPT
 

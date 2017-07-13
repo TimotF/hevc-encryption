@@ -435,7 +435,7 @@ set(libfilenames
 #    libkvz/cfg.c
 #    libkvz/checkpoint.c
 #    libkvz/cli.c
-#    libkvz/context.c
+    libkvz/context.c
 #    libkvz/cu.c
 #    libkvz/encmain.c
 #    libkvz/encode_coding_tree.c

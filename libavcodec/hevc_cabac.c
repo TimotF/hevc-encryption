@@ -577,7 +577,11 @@ static void cabac_init_decoder(HEVCContext *s)
 
 static void cabac_init_encoder(HEVCContext *s)
 {
+#if HEVC_DECRYPT
     kvz_cabac_start(&s->HEVClc->ccc);
+#else
+    //TODO : gestion erreur
+#endif
 }
 
 static void cabac_init_state(HEVCContext *s)

@@ -35,6 +35,9 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/stereo3d.h"
 
+#include "libkvz/bitstream.h"
+#include "libkvz/context.h"
+
 #include "bswapdsp.h"
 #include "bytestream.h"
 #include "cabac_functions.h"
@@ -3820,6 +3823,14 @@ static int decode_nal_unit(HEVCContext *s, const uint8_t *nal, int length)
     GetBitContext *gb    = &lc->gb;
     int ctb_addr_ts, ret;
 
+#if HEVC_DECRYPT
+    #if VERBOSE
+        printf("clear bitstream\n");
+    #endif
+    kvz_bitstream_clear(lc->ccc.stream);
+#endif
+
+
     ret = init_get_bits8(gb, nal, length);
     if (ret < 0)
         return ret;
@@ -4164,6 +4175,8 @@ nsc:
 
 static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
 {
+    HEVCLocalContext *lc = s->HEVClc;
+
     int i,  consumed, ret = 0;
     int nb_start_bytes = 0;
     int skipped_bytes = 0;
@@ -4181,6 +4194,18 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
 
     uint8_t *packet_buffer = *data; // the new buffer that will replace the initial data
     int packet_length = 0;  // the length of the new buffer
+
+#if HEVC_DECRYPT
+    #if VERBOSE
+        printf("init bitstream\n");
+    #endif
+    lc->ccc.stream = &lc->stream;
+    kvz_bitstream_init(lc->ccc.stream);
+    #if VERBOSE
+        printf("init bitstream done\n");
+    #endif
+#endif
+
 
 
 #if PARALLEL_SLICE
