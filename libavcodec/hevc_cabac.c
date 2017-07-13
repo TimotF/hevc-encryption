@@ -578,13 +578,14 @@ static void cabac_init_decoder(HEVCContext *s)
 static void cabac_init_encoder(HEVCContext *s)
 {
     uint8_t *buffer = NULL;
-    int size = s->Hevclc->gb.size_in_bits_plus8 / 8;
+    int size = s->HEVClc->gb.size_in_bits_plus8 / 8;
     buffer = (uint8_t*)av_malloc(size);
     if(!buffer){
         fprintf(stderr,"Error while allicating PutBitContext buffer\n");
         exit(1);
     }
-    ff_init_cabac_encoder(&s->HEVClc->ccc,buffer,size);
+    cabac_start(&s->HEVClc->ccc, buffer,size);
+    //ff_init_cabac_encoder(&s->HEVClc->ccc,buffer,size);
 }
 
 static void cabac_init_state(HEVCContext *s)
@@ -618,6 +619,9 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
 
 #if HEVC_DECRYPT
         cabac_init_encoder(s);
+    #if VERBOSE
+        printf("Cabac encoder initialisation\n");
+    #endif
 #endif
         
         if (s->sh.dependent_slice_segment_flag == 0 ||
@@ -654,6 +658,9 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
 
 #if HEVC_DECRYPT
             cabac_init_encoder(s);
+    #if VERBOSE
+            printf("Cabac encoder initialisation\n");
+    #endif
 #endif
             cabac_init_state(s);
 #if HEVC_ENCRYPTION
@@ -676,6 +683,9 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
 
 #if HEVC_DECRYPT
                         cabac_init_encoder(s);
+    #if VERBOSE
+                        printf("Cabac encoder initialisation\n");
+    #endif
 #endif
 
                     if (s->ps.pps->tile_width[ctb_addr_ts] == 1)

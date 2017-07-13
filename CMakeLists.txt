@@ -418,8 +418,12 @@ set(libfilenames
 # openHEVC wrapper
     gpac/modules/openhevc_dec/openHevcWrapper.c
 
+# hevc encoder
+    libavcodec/cabac_functions.c
+
+
 # libkvz
-    libkvz/extras/crypto.cpp
+#    libkvz/extras/crypto.cpp
 #    libkvz/extras/getopt.c
 #    libkvz/extras/libmd5.c
 #    libkvz/strategies/strategies-dct.c
@@ -429,8 +433,8 @@ set(libfilenames
 #    libkvz/strategies/strategies-picture.c
 #    libkvz/strategies/strategies-quant.c
 #    libkvz/strategies/strategies-sao.c
-    libkvz/bitstream.c
-    libkvz/cabac.c
+#    libkvz/bitstream.c
+#    libkvz/cabac.c
 #    libkvz/cfg.c
 #    libkvz/checkpoint.c
 #    libkvz/cli.c

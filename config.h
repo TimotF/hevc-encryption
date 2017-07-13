@@ -385,5 +385,6 @@
 #define CONFIG_PIPE_PROTOCOL 0
 #endif /* FFMPEG_CONFIG_H */
 #define HEVC_ENCRYPTION 1
-#define COM16_C806_EMT 0 
+#define COM16_C806_EMT 0
 #define HEVC_DECRYPT 1
+#define VERBOSE 1
