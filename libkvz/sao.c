@@ -172,7 +172,7 @@ void kvz_calc_sao_offset_array(const encoder_control_t * const encoder, const sa
   for (val = 0; val < values; val++) {
     int cur_band = val>>shift;
     if (cur_band >= sao->band_position[band_pos] && cur_band < sao->band_position[band_pos] + 4) {
-      offset[val] = CLIP(0, values - 1, val + sao->offsets[cur_band - sao->band_position[band_pos] + 1 + 5 * band_pos]);
+      offset[val] = KVZ_CLIP(0, values - 1, val + sao->offsets[cur_band - sao->band_position[band_pos] + 1 + 5 * band_pos]);
     } else {
       offset[val] = val;
     }
@@ -206,7 +206,7 @@ static int calc_sao_band_offsets(int sao_bands[2][32], int offsets[4],
     offset = 0;
     if (sao_bands[1][band] != 0) {
       offset = (sao_bands[0][band] + (sao_bands[1][band] >> 1)) / sao_bands[1][band];
-      offset = CLIP(-SAO_ABS_OFFSET_MAX, SAO_ABS_OFFSET_MAX, offset);
+      offset = KVZ_CLIP(-SAO_ABS_OFFSET_MAX, SAO_ABS_OFFSET_MAX, offset);
     }
     dist[band] = offset==0?0:INT_MAX;
     temp_offsets[band] = 0;
@@ -476,7 +476,7 @@ static void sao_search_edge_sao(const encoder_state_t * const state,
         int offset = 0;
         if (cat_cnt != 0) {
           offset = (cat_sum + (cat_cnt >> 1)) / cat_cnt;
-          offset = CLIP(-SAO_ABS_OFFSET_MAX, SAO_ABS_OFFSET_MAX, offset);
+          offset = KVZ_CLIP(-SAO_ABS_OFFSET_MAX, SAO_ABS_OFFSET_MAX, offset);
         }
 
         // Sharpening edge offsets can't be encoded, so set them to 0 here.

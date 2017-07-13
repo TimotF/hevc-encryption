@@ -35,7 +35,7 @@ static const double MAX_LAMBDA    = 10000;
  */
 static double clip_lambda(double lambda) {
   if (isnan(lambda)) return MAX_LAMBDA;
-  return CLIP(MIN_LAMBDA, MAX_LAMBDA, lambda);
+  return KVZ_CLIP(MIN_LAMBDA, MAX_LAMBDA, lambda);
 }
 
 /**
@@ -58,10 +58,10 @@ static void update_parameters(uint32_t bits,
   const double lambda_log_ratio = log(lambda_real) - log(lambda_comp);
 
   *alpha += 0.10 * lambda_log_ratio * (*alpha);
-  *alpha = CLIP(0.05, 20, *alpha);
+  *alpha = KVZ_CLIP(0.05, 20, *alpha);
 
-  *beta  += 0.05 * lambda_log_ratio * CLIP(-5.0, -1.0, log(bpp));
-  *beta  = CLIP(-3, -0.1, *beta);
+  *beta += 0.05 * lambda_log_ratio * KVZ_CLIP(-5.0, -1.0, log(bpp));
+  *beta = KVZ_CLIP(-3, -0.1, *beta);
 }
 
 /**
@@ -190,7 +190,7 @@ static double qp_to_lamba(encoder_state_t * const state, int qp)
     if (period == 0) {
       lambda *= 0.5;
     } else {
-      lambda *= 1.0 - CLIP(0.0, 0.5, 0.05 * (period - 1));
+      lambda *= 1.0 - KVZ_CLIP(0.0, 0.5, 0.05 * (period - 1));
     }
   } else if (gop_len > 0) {
     lambda *= gop->qp_factor;
@@ -200,7 +200,7 @@ static double qp_to_lamba(encoder_state_t * const state, int qp)
 
   // Increase lambda if not key-frame.
   if (period > 0 && state->frame->poc % period != 0) {
-    lambda *= CLIP(2.0, 4.0, (state->frame->QP - 12) / 6.0);
+    lambda *= KVZ_CLIP(2.0, 4.0, (state->frame->QP - 12) / 6.0);
   }
 
   return lambda;
@@ -320,13 +320,13 @@ void kvz_set_lcu_lambda_and_qp(encoder_state_t * const state,
     if (state->frame->num > ctrl->cfg.owf) {
       const double bpp         = lcu->bits / (double)pixels;
       const double lambda_comp = clip_lambda(lcu->rc_alpha * pow(bpp, lcu->rc_beta));
-      lambda = CLIP(lambda_comp * 0.7937005259840998,
-                    lambda_comp * 1.2599210498948732,
-                    lambda);
+      lambda = KVZ_CLIP(lambda_comp * 0.7937005259840998,
+                        lambda_comp * 1.2599210498948732,
+                        lambda);
     }
-    lambda = CLIP(state->frame->lambda * 0.6299605249474366,
-                  state->frame->lambda * 1.5874010519681994,
-                  lambda);
+    lambda = KVZ_CLIP(state->frame->lambda * 0.6299605249474366,
+                      state->frame->lambda * 1.5874010519681994,
+                      lambda);
     lambda = clip_lambda(lambda);
 
     lcu->lambda        = lambda;

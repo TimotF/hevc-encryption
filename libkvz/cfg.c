@@ -273,7 +273,7 @@ static int parse_array(const char *array, uint8_t *coeff_key, int size,
 static int parse_slice_specification(const char* const arg, int32_t * const nslices, int32_t** const array) {
   const char* current_arg = NULL;
   int32_t current_value;
-  int32_t values[MAX_SLICES];
+  int32_t values[KVZ_MAX_SLICES];
   
   int i;
   
@@ -285,8 +285,8 @@ static int parse_slice_specification(const char* const arg, int32_t * const nsli
   //If the arg starts with u, we want an uniform split
   if (arg[0]=='u') {
     *nslices = atoi(arg+1);
-    if (MAX_SLICES <= *nslices || 0 >= *nslices) {
-      fprintf(stderr, "Invalid number of tiles (0 < %d <= %d = MAX_SLICES)!\n", *nslices + 1, MAX_SLICES);
+    if (KVZ_MAX_SLICES <= *nslices || 0 >= *nslices) {
+      fprintf(stderr, "Invalid number of tiles (0 < %d <= %d = KVZ_MAX_SLICES)!\n", *nslices + 1, KVZ_MAX_SLICES);
       return 0;
     }
     //Done with parsing
@@ -309,11 +309,11 @@ static int parse_slice_specification(const char* const arg, int32_t * const nsli
     if (current_arg) ++current_arg;
     values[*nslices] = current_value;
     ++(*nslices);
-    if (MAX_SLICES <= *nslices) break;
+    if (KVZ_MAX_SLICES <= *nslices) break;
   } while (current_arg);
   
-  if (MAX_SLICES <= *nslices || 0 >= *nslices) {
-    fprintf(stderr, "Invalid number of slices (0 < %d <= %d = MAX_SLICES)!\n", *nslices, MAX_SLICES);
+  if (KVZ_MAX_SLICES <= *nslices || 0 >= *nslices) {
+    fprintf(stderr, "Invalid number of slices (0 < %d <= %d = KVZ_MAX_SLICES)!\n", *nslices, KVZ_MAX_SLICES);
     return 0;
   }
   
@@ -1087,7 +1087,7 @@ int kvz_config_parse(kvz_config *cfg, const char *name, const char *value)
         fclose(f);
         return 0;
       }
-      dqp_array[i] = CLIP(-51, 51, number);
+      dqp_array[i] = KVZ_CLIP(-51, 51, number);
     }
 
     fclose(f);

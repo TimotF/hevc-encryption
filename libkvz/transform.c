@@ -132,7 +132,7 @@ int32_t kvz_get_scaled_qp(int8_t type, int8_t qp, int8_t qp_offset)
   if(type == 0) {
     qp_scaled = qp + qp_offset;
   } else {
-    qp_scaled = CLIP(-qp_offset, 57, qp);
+    qp_scaled = KVZ_CLIP(-qp_offset, 57, qp);
     if(qp_scaled < 0) {
       qp_scaled = qp_scaled + qp_offset;
     } else {

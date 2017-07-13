@@ -93,12 +93,12 @@ static INLINE int kvz_filter_deblock_luma_strong(
   const kvz_pixel m6 = line[6];
   const kvz_pixel m7 = line[7];
 
-  line[1] = CLIP(m1 - 2*tc, m1 + 2*tc, (2*m0 + 3*m1 +   m2 +   m3 +   m4 + 4) >> 3);
-  line[2] = CLIP(m2 - 2*tc, m2 + 2*tc, (  m1 +   m2 +   m3 +   m4        + 2) >> 2);
-  line[3] = CLIP(m3 - 2*tc, m3 + 2*tc, (  m1 + 2*m2 + 2*m3 + 2*m4 +   m5 + 4) >> 3);
-  line[4] = CLIP(m4 - 2*tc, m4 + 2*tc, (  m2 + 2*m3 + 2*m4 + 2*m5 +   m6 + 4) >> 3);
-  line[5] = CLIP(m5 - 2*tc, m5 + 2*tc, (  m3 +   m4 +   m5 +   m6        + 2) >> 2);
-  line[6] = CLIP(m6 - 2*tc, m6 + 2*tc, (  m3 +   m4 +   m5 + 3*m6 + 2*m7 + 4) >> 3);
+  line[1] = KVZ_CLIP(m1 - 2*tc, m1 + 2*tc, (2*m0 + 3*m1 +   m2 +   m3 +   m4 + 4) >> 3);
+  line[2] = KVZ_CLIP(m2 - 2*tc, m2 + 2*tc, (  m1 +   m2 +   m3 +   m4        + 2) >> 2);
+  line[3] = KVZ_CLIP(m3 - 2*tc, m3 + 2*tc, (  m1 + 2*m2 + 2*m3 + 2*m4 +   m5 + 4) >> 3);
+  line[4] = KVZ_CLIP(m4 - 2*tc, m4 + 2*tc, (  m2 + 2*m3 + 2*m4 + 2*m5 +   m6 + 4) >> 3);
+  line[5] = KVZ_CLIP(m5 - 2*tc, m5 + 2*tc, (  m3 +   m4 +   m5 +   m6        + 2) >> 2);
+  line[6] = KVZ_CLIP(m6 - 2*tc, m6 + 2*tc, (  m3 +   m4 +   m5 + 3*m6 + 2*m7 + 4) >> 3);
 
   return 3;
 }
@@ -131,17 +131,17 @@ static INLINE int kvz_filter_deblock_luma_weak(
     return 0;
   } else {
     int32_t tc2 = tc >> 1;
-    delta = CLIP(-tc, tc, delta);
-    line[3] = CLIP(0, (1 << encoder->bitdepth) - 1, (m3 + delta));
-    line[4] = CLIP(0, (1 << encoder->bitdepth) - 1, (m4 - delta));
+    delta = KVZ_CLIP(-tc, tc, delta);
+    line[3] = KVZ_CLIP(0, (1 << encoder->bitdepth) - 1, (m3 + delta));
+    line[4] = KVZ_CLIP(0, (1 << encoder->bitdepth) - 1, (m4 - delta));
 
     if (p_2nd) {
-      int32_t delta1 = CLIP(-tc2, tc2, (((m1 + m3 + 1) >> 1) - m2 + delta) >> 1);
-      line[2] = CLIP(0, (1 << encoder->bitdepth) - 1, m2 + delta1);
+      int32_t delta1 = KVZ_CLIP(-tc2, tc2, (((m1 + m3 + 1) >> 1) - m2 + delta) >> 1);
+      line[2] = KVZ_CLIP(0, (1 << encoder->bitdepth) - 1, m2 + delta1);
     }
     if (q_2nd) {
-      int32_t delta2 = CLIP(-tc2, tc2, (((m6 + m4 + 1) >> 1) - m5 - delta) >> 1);
-      line[5] = CLIP(0, (1 << encoder->bitdepth) - 1, m5 + delta2);
+      int32_t delta2 = KVZ_CLIP(-tc2, tc2, (((m6 + m4 + 1) >> 1) - m5 - delta) >> 1);
+      line[5] = KVZ_CLIP(0, (1 << encoder->bitdepth) - 1, m5 + delta2);
     }
     
     if (p_2nd || q_2nd) {
@@ -168,12 +168,12 @@ static INLINE void kvz_filter_deblock_chroma(const encoder_control_t * const enc
   int16_t m4 = src[0];
   int16_t m5 = src[offset];
 
-  delta = CLIP(-tc,tc, (((m4 - m3) << 2) + m2 - m5 + 4 ) >> 3);
+  delta = KVZ_CLIP(-tc,tc, (((m4 - m3) << 2) + m2 - m5 + 4 ) >> 3);
   if(!part_P_nofilter) {
-    src[-offset] = CLIP(0, (1 << encoder->bitdepth) - 1, m3 + delta);
+    src[-offset] = KVZ_CLIP(0, (1 << encoder->bitdepth) - 1, m3 + delta);
   }
   if(!part_Q_nofilter) {
-    src[0] = CLIP(0, (1 << encoder->bitdepth) - 1, m4 - delta);
+    src[0] = KVZ_CLIP(0, (1 << encoder->bitdepth) - 1, m4 - delta);
   }
 }
 
@@ -358,7 +358,7 @@ static void filter_deblock_edge_luma(encoder_state_t * const state,
 
     int8_t strength = 0;
     int32_t bitdepth_scale  = 1 << (encoder->bitdepth - 8);
-    int32_t b_index         = CLIP(0, 51, qp + (beta_offset_div2 << 1));
+    int32_t b_index         = KVZ_CLIP(0, 51, qp + (beta_offset_div2 << 1));
     int32_t beta            = kvz_g_beta_table_8x8[b_index] * bitdepth_scale;
     int32_t side_threshold  = (beta + (beta >>1 )) >> 3;
     int32_t tc_index;
@@ -470,7 +470,7 @@ static void filter_deblock_edge_luma(encoder_state_t * const state,
           }
         }
 
-        tc_index        = CLIP(0, 51 + 2, (int32_t)(qp + 2*(strength - 1) + (tc_offset_div2 << 1)));
+        tc_index        = KVZ_CLIP(0, 51 + 2, (int32_t)(qp + 2*(strength - 1) + (tc_offset_div2 << 1)));
         tc              = kvz_g_tc_table_8x8[tc_index] * bitdepth_scale;
       }
 
@@ -572,7 +572,7 @@ static void filter_deblock_edge_chroma(encoder_state_t * const state,
     const int32_t luma_qp  = get_qp_y_pred(state, x << 1, y << 1, dir);
     int32_t QP             = kvz_g_chroma_scale[luma_qp];
     int32_t bitdepth_scale = 1 << (encoder->bitdepth-8);
-    int32_t TC_index       = CLIP(0, 51+2, (int32_t)(QP + 2*(strength-1) + (tc_offset_div2 << 1)));
+    int32_t TC_index       = KVZ_CLIP(0, 51+2, (int32_t)(QP + 2*(strength-1) + (tc_offset_div2 << 1)));
     int32_t Tc             = kvz_g_tc_table_8x8[TC_index]*bitdepth_scale;
 
     const uint32_t num_4px_parts = length / 4;

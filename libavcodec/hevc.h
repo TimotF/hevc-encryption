@@ -26,6 +26,8 @@
 #include "libavutil/buffer.h"
 #include "libavutil/md5.h"
 
+#include "libkvz/cabac.h"
+
 #include "avcodec.h"
 #include "bswapdsp.h"
 #include "cabac.h"

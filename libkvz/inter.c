@@ -270,8 +270,8 @@ static void inter_cp_with_ext_border(const kvz_pixel *ref_buf, int ref_stride,
   for (int y = mv_in_frame->y; y < mv_in_frame->y + height; ++y) {
     for (int x = mv_in_frame->x; x < mv_in_frame->x + width; ++x) {
       vector2d_t in_frame = {
-        CLIP(0, ref_width - 1, x),
-        CLIP(0, ref_height - 1, y),
+        KVZ_CLIP(0, ref_width - 1, x),
+        KVZ_CLIP(0, ref_height - 1, y),
       };
       vector2d_t in_pu = {
         x - mv_in_frame->x,
@@ -906,7 +906,7 @@ static void get_spatial_merge_candidates_cua(const cu_array_t *cua,
 static INLINE int16_t get_scaled_mv(int16_t mv, int scale)
 {
   int32_t scaled = scale * mv;
-  return CLIP(-32768, 32767, (scaled + 127 + (scaled < 0)) >> 8);
+  return KVZ_CLIP(-32768, 32767, (scaled + 127 + (scaled < 0)) >> 8);
 }
 
 static void apply_mv_scaling_pocs(int32_t current_poc,
@@ -920,10 +920,10 @@ static void apply_mv_scaling_pocs(int32_t current_poc,
 
   if (diff_current == diff_neighbor) return;
 
-  diff_current  = CLIP(-128, 127, diff_current);
-  diff_neighbor = CLIP(-128, 127, diff_neighbor);
+  diff_current  = KVZ_CLIP(-128, 127, diff_current);
+  diff_neighbor = KVZ_CLIP(-128, 127, diff_neighbor);
 
-  int scale = CLIP(-4096, 4095,
+  int scale = KVZ_CLIP(-4096, 4095,
     (diff_current * ((0x4000 + (abs(diff_neighbor) >> 1)) / diff_neighbor) + 32) >> 6);
 
   mv_cand[0] = get_scaled_mv(mv_cand[0], scale);

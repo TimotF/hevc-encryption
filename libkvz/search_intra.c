@@ -578,7 +578,7 @@ static int8_t search_intra_rdo(encoder_state_t * const state,
                              int8_t modes[35], double costs[35],
                              lcu_t *lcu)
 {
-  const int tr_depth = CLIP(1, MAX_PU_DEPTH, depth + state->encoder_control->cfg.tr_depth_intra);
+  const int tr_depth = KVZ_CLIP(1, MAX_PU_DEPTH, depth + state->encoder_control->cfg.tr_depth_intra);
   const int width = LCU_WIDTH >> depth;
 
   kvz_pixel orig_block[LCU_WIDTH * LCU_WIDTH + 1];

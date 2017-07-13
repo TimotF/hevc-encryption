@@ -232,10 +232,10 @@ static void fast_inverse_dst_4_generic(const short *tmp, short *block, int shift
     c[2] = tmp[i] - tmp[12 + i];
     c[3] = 74 * tmp[4 + i];
 
-    block[4 * i + 0] = (short)CLIP(-32768, 32767, (29 * c[0] + 55 * c[1] + c[3] + rnd_factor) >> shift);
-    block[4 * i + 1] = (short)CLIP(-32768, 32767, (55 * c[2] - 29 * c[1] + c[3] + rnd_factor) >> shift);
-    block[4 * i + 2] = (short)CLIP(-32768, 32767, (74 * (tmp[i] - tmp[8 + i] + tmp[12 + i]) + rnd_factor) >> shift);
-    block[4 * i + 3] = (short)CLIP(-32768, 32767, (55 * c[0] + 29 * c[2] - c[3] + rnd_factor) >> shift);
+    block[4 * i + 0] = (short)KVZ_CLIP(-32768, 32767, (29 * c[0] + 55 * c[1] + c[3] + rnd_factor) >> shift);
+    block[4 * i + 1] = (short)KVZ_CLIP(-32768, 32767, (55 * c[2] - 29 * c[1] + c[3] + rnd_factor) >> shift);
+    block[4 * i + 2] = (short)KVZ_CLIP(-32768, 32767, (74 * (tmp[i] - tmp[8 + i] + tmp[12 + i]) + rnd_factor) >> shift);
+    block[4 * i + 3] = (short)KVZ_CLIP(-32768, 32767, (55 * c[0] + 29 * c[2] - c[3] + rnd_factor) >> shift);
   }
 }
 
@@ -282,10 +282,10 @@ static void partial_butterfly_inverse_4_generic(const short *src, short *dst,
     e[1] = kvz_g_dct_4[0][1] * src[0] + kvz_g_dct_4[2][1] * src[2 * line];
 
     // Combining even and odd terms at each hierarchy levels to calculate the final spatial domain vector
-    dst[0] = (short)CLIP(-32768, 32767, (e[0] + o[0] + add) >> shift);
-    dst[1] = (short)CLIP(-32768, 32767, (e[1] + o[1] + add) >> shift);
-    dst[2] = (short)CLIP(-32768, 32767, (e[1] - o[1] + add) >> shift);
-    dst[3] = (short)CLIP(-32768, 32767, (e[0] - o[0] + add) >> shift);
+    dst[0] = (short)KVZ_CLIP(-32768, 32767, (e[0] + o[0] + add) >> shift);
+    dst[1] = (short)KVZ_CLIP(-32768, 32767, (e[1] + o[1] + add) >> shift);
+    dst[2] = (short)KVZ_CLIP(-32768, 32767, (e[1] - o[1] + add) >> shift);
+    dst[3] = (short)KVZ_CLIP(-32768, 32767, (e[0] - o[0] + add) >> shift);
 
     src++;
     dst += 4;

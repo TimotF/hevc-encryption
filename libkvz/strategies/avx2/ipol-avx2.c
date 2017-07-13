@@ -1399,7 +1399,7 @@ void kvz_get_extended_block_avx2(int xpos, int ypos, int mv_x, int mv_y, int off
 
       // calculate y-pixel offset
       coord_y = y + off_y + mv_y;
-      coord_y = CLIP(0, (ref_height)-1, coord_y);
+      coord_y = KVZ_CLIP(0, (ref_height)-1, coord_y);
       coord_y *= ref_width;
 
       if (!out_of_bounds_x){
@@ -1408,7 +1408,7 @@ void kvz_get_extended_block_avx2(int xpos, int ypos, int mv_x, int mv_y, int off
         for (dst_x = 0, x = (xpos)-half_filter_size; x < ((xpos + width)) + half_filter_size; dst_x++, x++) {
 
           coord_x = x + off_x + mv_x;
-          coord_x = CLIP(0, (ref_width)-1, coord_x);
+          coord_x = KVZ_CLIP(0, (ref_width)-1, coord_x);
 
           // Store source block data (with extended borders)
           out->buffer[dst_y * out->stride + dst_x] = ref[coord_y + coord_x];

@@ -137,7 +137,7 @@ void kvz_sao_reconstruct_color_generic(const encoder_control_t * const encoder,
 
         int eo_cat = sao_calc_eo_cat(a, b, c);
 
-        new_data[0] = (kvz_pixel)CLIP(0, (1 << KVZ_BIT_DEPTH) - 1, c_data[0] + sao->offsets[eo_cat + offset_v]);
+        new_data[0] = (kvz_pixel)KVZ_CLIP(0, (1 << KVZ_BIT_DEPTH) - 1, c_data[0] + sao->offsets[eo_cat + offset_v]);
       }
     }
   }

@@ -63,7 +63,7 @@ void kvz_quant_generic(const encoder_state_t * const state, coeff_t *coef, coeff
     ac_sum += level;
 
     level *= sign;
-    q_coef[n] = (coeff_t)(CLIP(-32768, 32767, level));
+    q_coef[n] = (coeff_t)(KVZ_CLIP(-32768, 32767, level));
   }
 
   if (!encoder->cfg.signhide_enable || ac_sum < 2) return;
@@ -253,7 +253,7 @@ int kvz_quantize_residual_generic(encoder_state_t *const state,
     for (y = 0; y < width; ++y) {
       for (x = 0; x < width; ++x) {
         int16_t val = residual[x + y * width] + pred_in[x + y * in_stride];
-        rec_out[x + y * out_stride] = (kvz_pixel)CLIP(0, PIXEL_MAX, val);
+        rec_out[x + y * out_stride] = (kvz_pixel)KVZ_CLIP(0, PIXEL_MAX, val);
       }
     }
   }
@@ -300,13 +300,13 @@ void kvz_dequant_generic(const encoder_state_t * const state, coeff_t *q_coef, c
 
       for (n = 0; n < width * height; n++) {
         coeff_q = ((q_coef[n] * dequant_coef[n]) + add ) >> (shift -  qp_scaled/6);
-        coef[n] = (coeff_t)CLIP(-32768,32767,coeff_q);
+        coef[n] = (coeff_t)KVZ_CLIP(-32768,32767,coeff_q);
       }
     } else {
       for (n = 0; n < width * height; n++) {
         // Clip to avoid possible overflow in following shift left operation
-        coeff_q   = CLIP(-32768, 32767, q_coef[n] * dequant_coef[n]);
-        coef[n] = (coeff_t)CLIP(-32768, 32767, coeff_q << (qp_scaled/6 - shift));
+        coeff_q   = KVZ_CLIP(-32768, 32767, q_coef[n] * dequant_coef[n]);
+        coef[n] = (coeff_t)KVZ_CLIP(-32768, 32767, coeff_q << (qp_scaled/6 - shift));
       }
     }
   } else {
@@ -315,7 +315,7 @@ void kvz_dequant_generic(const encoder_state_t * const state, coeff_t *q_coef, c
 
     for (n = 0; n < width*height; n++) {
       coeff_q   = (q_coef[n] * scale + add) >> shift;
-      coef[n] = (coeff_t)CLIP(-32768, 32767, coeff_q);
+      coef[n] = (coeff_t)KVZ_CLIP(-32768, 32767, coeff_q);
     }
   }
 }

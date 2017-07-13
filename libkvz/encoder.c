@@ -70,7 +70,7 @@ static int select_owf_auto(const kvz_config *const cfg)
       const int frames = CEILDIV(threads, threads_per_frame);
 
       // Convert from number of parallel frames to number of additional frames.
-      return CLIP(0, threads - 1, frames - 1);
+      return KVZ_CLIP(0, threads - 1, frames - 1);
     } else {
       // If wpp is not on, select owf such that there is enough
       // tiles for twice the number of threads.
@@ -81,7 +81,7 @@ static int select_owf_auto(const kvz_config *const cfg)
 
       // Limit number of frames to 1.25x the number of threads for the case
       // where there is only 1 tile per frame.
-      frames = CLIP(1, threads * 4 / 3, frames);
+      frames = KVZ_CLIP(1, threads * 4 / 3, frames);
       return frames - 1;
     }
   } else {
@@ -106,7 +106,7 @@ static int select_owf_auto(const kvz_config *const cfg)
       // more parallel frames should be used.
       frames *= 2;
     }
-    return CLIP(0, cfg->threads * 2 - 1, frames - 1);
+    return KVZ_CLIP(0, cfg->threads * 2 - 1, frames - 1);
   }
 }
 
@@ -190,7 +190,7 @@ static void init_erp_aqp_roi(encoder_control_t* encoder,
       int y_roi = y_lcu * orig_height / height;
       for (int x = 0; x < width; x++) {
         encoder->cfg.roi.dqps[x + y_lcu * width] =
-          CLIP(-51, 51, orig_roi[x + y_roi * width] + qp_delta);
+          KVZ_CLIP(-51, 51, orig_roi[x + y_roi * width] + qp_delta);
       }
 
     } else {

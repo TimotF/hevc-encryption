@@ -577,15 +577,7 @@ static void cabac_init_decoder(HEVCContext *s)
 
 static void cabac_init_encoder(HEVCContext *s)
 {
-    uint8_t *buffer = NULL;
-    int size = s->HEVClc->gb.size_in_bits_plus8 / 8;
-    buffer = (uint8_t*)av_malloc(size);
-    if(!buffer){
-        fprintf(stderr,"Error while allicating PutBitContext buffer\n");
-        exit(1);
-    }
-    cabac_start(&s->HEVClc->ccc, buffer,size);
-    //ff_init_cabac_encoder(&s->HEVClc->ccc,buffer,size);
+    kvz_cabac_start(&s->HEVClc->ccc);
 }
 
 static void cabac_init_state(HEVCContext *s)

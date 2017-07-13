@@ -156,9 +156,9 @@ typedef int16_t coeff_t;
 #define ABS(a) ((a) >= 0 ? (a) : (-a))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define MIN(a,b) (((a)<(b))?(a):(b))
-#define CLIP(low,high,value) MAX((low),MIN((high),(value)))
-#define CLIP_TO_PIXEL(value) CLIP(0, PIXEL_MAX, (value))
-#define CLIP_TO_QP(value) CLIP(0, 51, (value))
+#define KVZ_CLIP(low, high, value) MAX((low), MIN((high), (value)))
+#define CLIP_TO_PIXEL(value) KVZ_CLIP(0, PIXEL_MAX, (value))
+#define CLIP_TO_QP(value) KVZ_CLIP(0, 51, (value))
 #define SWAP(a,b,swaptype) { swaptype tempval; tempval = a; a = b; b = tempval; }
 #define CU_WIDTH_FROM_DEPTH(depth) (LCU_WIDTH >> depth)
 #define WITHIN(val, min_val, max_val) ((min_val) <= (val) && (val) <= (max_val))
@@ -187,7 +187,7 @@ typedef int16_t coeff_t;
 #define SAO_ABS_OFFSET_MAX ((1 << (MIN(KVZ_BIT_DEPTH, 10) - 5)) - 1)
 
 #define MAX_TILES_PER_DIM 48
-#define MAX_SLICES 16
+#define KVZ_MAX_SLICES 16
 
 /* Inlining functions */
 #ifdef _MSC_VER /* Visual studio */

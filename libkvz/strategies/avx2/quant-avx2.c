@@ -468,13 +468,13 @@ void kvz_dequant_avx2(const encoder_state_t * const state, coeff_t *q_coef, coef
 
       for (n = 0; n < width * height; n++) {
         coeff_q = ((q_coef[n] * dequant_coef[n]) + add ) >> (shift -  qp_scaled/6);
-        coef[n] = (coeff_t)CLIP(-32768,32767,coeff_q);
+        coef[n] = (coeff_t)KVZ_CLIP(-32768, 32767, coeff_q);
       }
     } else {
       for (n = 0; n < width * height; n++) {
         // Clip to avoid possible overflow in following shift left operation
-        coeff_q   = CLIP(-32768, 32767, q_coef[n] * dequant_coef[n]);
-        coef[n] = (coeff_t)CLIP(-32768, 32767, coeff_q << (qp_scaled/6 - shift));
+        coeff_q = KVZ_CLIP(-32768, 32767, q_coef[n] * dequant_coef[n]);
+        coef[n] = (coeff_t)KVZ_CLIP(-32768, 32767, coeff_q << (qp_scaled / 6 - shift));
       }
     }
   } else {
