@@ -4437,23 +4437,28 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         }
 #if HEVC_DECRYPT
     #if VERBOSE
+        int len_out = kvz_bitstream_tell(lc->ccc.stream)/8;
         printf("saving nal in buffer (%d bits)\n", kvz_bitstream_tell(lc->ccc.stream));
     #endif
-        int len_out;
+        
+        uint64_t written = 0;
         kvz_data_chunk *data_out = kvz_bitstream_take_chunks(lc->ccc.stream);
         while(data_out!=NULL){
-            len_out = kvz_bitstream_tell(lc->ccc.stream) / 8;
-            if (*data_length < packet_length + len_out)
-                packet_buffer = av_realloc(packet_buffer, packet_length + len_out);
-            memcpy(packet_buffer + packet_length, data_out->data, len_out);
-            packet_length += len_out;
+            int len_chuck = data_out->len;
+            assert(written + len_chuck <= len_out);
+            if (*data_length < packet_length + len_chuck)
+                packet_buffer = av_realloc(packet_buffer, packet_length + len_chuck);
+            memcpy(packet_buffer + packet_length, data_out->data, len_chuck);
+            packet_length += len_chuck;
     #if VERBOSE
             int m;
-            for(m = 0; m<len_out;m++){
+            for (m = 0; m < len_chuck; m++)
+            {
                 printf("%02x ", data_out->data[m]);
             }
             printf("\n");
     #endif
+            written += len_chuck;
             data_out = data_out->next;
         }
     #if VERBOSE
