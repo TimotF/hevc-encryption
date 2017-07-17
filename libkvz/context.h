@@ -34,8 +34,9 @@
 // Functions
 void kvz_ctx_init(cabac_ctx_t* ctx, uint32_t qp, uint32_t init_value);
 void kvz_init_contexts(encoder_state_t *state, int8_t QP, int8_t slice);
+void kvz_init_cabac_contexts(cabac_data_t *cabac, int8_t QP, int8_t slice);
 
-void kvz_context_copy(encoder_state_t * target_state, const encoder_state_t * source_state);
+void kvz_context_copy(encoder_state_t *target_state, const encoder_state_t *source_state);
 int32_t kvz_context_calc_pattern_sig_ctx( const uint32_t *sig_coeff_group_flag, uint32_t pos_x, uint32_t pos_y, int32_t width);
 
 uint32_t kvz_context_get_sig_coeff_group( uint32_t *sig_coeff_group_flag,uint32_t pos_x, uint32_t pos_y,int32_t width);
