@@ -24,6 +24,9 @@
 #include "libavutil/attributes.h"
 #include "libavutil/common.h"
 
+#include "libkvz/bitstream.h"
+#include "libkvz/context.h"
+
 #include "cabac_functions.h"
 #include "hevc.h"
 
@@ -610,6 +613,7 @@ static void cabac_init_state(HEVCContext *s)
 
 void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
 {
+    HEVCLocalContext *lc = s->HEVClc;
     if (ctb_addr_ts == s->ps.pps->ctb_addr_rs_to_ts[s->sh.slice_ctb_addr_rs]) {
         cabac_init_decoder(s);
 
@@ -642,6 +646,9 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
                     load_states(s);
             }
         }
+#if HEVC_DECRYPT
+        kvz_init_cabac_contexts(&lc->ccc, s->sh.slice_qp, s->sh.slice_type);
+#endif
     } else {
         if (s->ps.pps->tiles_enabled_flag &&
             s->ps.pps->tile_id[ctb_addr_ts] != s->ps.pps->tile_id[ctb_addr_ts - 1]) {
@@ -691,6 +698,9 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
                 }
             }
         }
+#if HEVC_DECRYPT
+        kvz_init_cabac_contexts(&lc->ccc, s->sh.slice_qp, s->sh.slice_type);
+#endif
     }
 }
 

@@ -1341,6 +1341,9 @@ do {                                                    \
 static void hls_sao_param(HEVCContext *s, int rx, int ry)
 {
     HEVCLocalContext *lc    = s->HEVClc;
+#if HEVC_DECRYPT
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
     int sao_merge_left_flag = 0;
     int sao_merge_up_flag   = 0;
     SAOParams *sao          = &CTB(s->sao, rx, ry);
@@ -1349,12 +1352,22 @@ static void hls_sao_param(HEVCContext *s, int rx, int ry)
     if (s->sh.slice_sample_adaptive_offset_flag[0] ||
         s->sh.slice_sample_adaptive_offset_flag[1]) {
         if (rx > 0) {
-            if (lc->ctb_left_flag)
+            if (lc->ctb_left_flag){
                 sao_merge_left_flag = ff_hevc_sao_merge_flag_decode(s);
+#if HEVC_DECRYPT
+                cabac->cur_ctx = &(cabac->ctx.sao_merge_flag_model);
+                CABAC_BIN(cabac, sao_merge_left_flag, "sao_merge_left_flag");
+#endif
+            }
         }
         if (ry > 0 && !sao_merge_left_flag) {
-            if (lc->ctb_up_flag)
+            if (lc->ctb_up_flag){
                 sao_merge_up_flag = ff_hevc_sao_merge_flag_decode(s);
+#if HEVC_DECRYPT
+                cabac->cur_ctx = &(cabac->ctx.sao_merge_flag_model);
+                CABAC_BIN(cabac, sao_merge_up_flag, "sao_merge_up_flag");
+#endif
+            }
         }
     }
 
@@ -1371,7 +1384,19 @@ static void hls_sao_param(HEVCContext *s, int rx, int ry)
             sao->type_idx[2] = sao->type_idx[1];
             sao->eo_class[2] = sao->eo_class[1];
         } else {
-            SET_SAO(type_idx[c_idx], ff_hevc_sao_type_idx_decode(s));
+#if HEVC_DECRYPT
+            cabac->cur_ctx = &(cabac->ctx.sao_type_idx_model);
+#endif
+            int sao_type_idx = ff_hevc_sao_type_idx_decode(s);
+            SET_SAO(type_idx[c_idx], sao_type_idx);
+#if HEVC_DECRYPT
+            CABAC_BIN(cabac, sao_type_idx != 0, "sao_type_idx");
+            if (sao_type_idx == SAO_BAND){
+                CABAC_BIN_EP(cabac, 0, "sao_type_idx_ep");
+            }else if (sao_type_idx == SAO_EDGE){
+                CABAC_BIN_EP(cabac, 1, "sao_type_idx_ep");
+            }
+#endif
         }
 
         if (sao->type_idx[c_idx] == SAO_NOT_APPLIED)
@@ -3828,6 +3853,7 @@ static int decode_nal_unit(HEVCContext *s, const uint8_t *nal, int length)
         printf("clear bitstream\n");
     #endif
     kvz_bitstream_clear(lc->ccc.stream);
+
 #endif
 
 
@@ -4418,11 +4444,50 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
                    "Error parsing NAL unit #%d.\n", i);
             goto fail;
         }
+#if HEVC_DECRYPT
+    #if VERBOSE
+        printf("saving nal in buffer (%d bits)\n", kvz_bitstream_tell(lc->ccc.stream));
+    #endif
+        int len_out;
+        kvz_data_chunk *data_out = kvz_bitstream_take_chunks(lc->ccc.stream);
+        while(data_out!=NULL){
+            len_out = kvz_bitstream_tell(lc->ccc.stream) / 8;
+            if (*data_length < packet_length + len_out)
+                packet_buffer = av_realloc(packet_buffer, packet_length + len_out);
+            memcpy(packet_buffer + packet_length, data_out->data, len_out);
+            packet_length += len_out;
+    #if VERBOSE
+            int m;
+            for(m = 0; m<len_out;m++){
+                printf("%02x ", data_out->data[m]);
+            }
+            printf("\n");
+    #endif
+            data_out = data_out->next;
+        }
+    #if VERBOSE
+        printf("saving done\n");
+    #endif 
+
+#endif
+
+
+
+
     }
 #endif
 
     *data_length = packet_length;
     *data = packet_buffer;
+#if HEVC_DECRYPT
+    // Get stream length before taking chunks since that clears the stream.
+    // if (len_out)
+    //     *len_out = kvz_bitstream_tell(&stream) / 8;
+    // if (data_out)
+    //     *data_out = kvz_bitstream_take_chunks(&stream);
+    // free stream
+    kvz_bitstream_finalize(lc->ccc.stream);
+#endif
 
 fail:
     av_free(initial_buf);
