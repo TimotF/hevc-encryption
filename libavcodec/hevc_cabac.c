@@ -713,11 +713,31 @@ int ff_hevc_sao_merge_flag_decode(HEVCContext *s)
 
 int ff_hevc_sao_type_idx_decode(HEVCContext *s)
 {
-    if (!GET_CABAC(elem_offset[SAO_TYPE_IDX]))
-        return 0;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
 
-    if (!get_cabac_bypass(&s->HEVClc->cc))
+    if (!GET_CABAC(elem_offset[SAO_TYPE_IDX])){
+ #if HEVC_DECRYPT
+        CABAC_BIN(cabac, 0, "sao_type_idx");
+ #endif
+        return 0;
+    }
+#if HEVC_DECRYPT
+    CABAC_BIN(cabac, 1, "sao_type_idx");
+#endif
+
+    if (!get_cabac_bypass(&s->HEVClc->cc)){
+#if HEVC_DECRYPT
+        CABAC_BIN_EP(cabac, 0, "sao_type_idx_ep");
+#endif
         return SAO_BAND;
+    }
+
+#if HEVC_DECRYPT
+    CABAC_BIN_EP(cabac, 1, "sao_type_idx_ep");
+#endif
     return SAO_EDGE;
 }
 
@@ -1029,8 +1049,8 @@ static av_always_inline int mvd_sign_flag_decode(HEVCContext *s)
 {
     CABACContext *c = &s->HEVClc->cc;
     int ret = get_cabac_bypass_sign(c, -1);
-    *(c->bytestream - 1) = 0x21;
-    *(c->bytestream - 2) = 0x21;
+    // *(c->bytestream - 1) = 0x21;
+    // *(c->bytestream - 2) = 0x21;
     return ret;
 }
 #if HEVC_ENCRYPTION

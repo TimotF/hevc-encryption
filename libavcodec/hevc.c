@@ -1387,16 +1387,7 @@ static void hls_sao_param(HEVCContext *s, int rx, int ry)
 #if HEVC_DECRYPT
             cabac->cur_ctx = &(cabac->ctx.sao_type_idx_model);
 #endif
-            int sao_type_idx = ff_hevc_sao_type_idx_decode(s);
-            SET_SAO(type_idx[c_idx], sao_type_idx);
-#if HEVC_DECRYPT
-            CABAC_BIN(cabac, sao_type_idx != 0, "sao_type_idx");
-            if (sao_type_idx == SAO_BAND){
-                CABAC_BIN_EP(cabac, 0, "sao_type_idx_ep");
-            }else if (sao_type_idx == SAO_EDGE){
-                CABAC_BIN_EP(cabac, 1, "sao_type_idx_ep");
-            }
-#endif
+            SET_SAO(type_idx[c_idx], ff_hevc_sao_type_idx_decode(s));
         }
 
         if (sao->type_idx[c_idx] == SAO_NOT_APPLIED)
