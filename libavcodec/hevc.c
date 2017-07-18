@@ -229,27 +229,45 @@ static void pred_weight_table(HEVCContext *s, GetBitContext *gb)
     uint8_t luma_weight_l1_flag[16];
     uint8_t chroma_weight_l1_flag[16];
     int luma_log2_weight_denom;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    bitstream_t *stream = cabac->stream;
+#endif
 
     luma_log2_weight_denom = get_ue_golomb_long(gb);
+#if HEVC_DECRYPT
+    kvz_bitstream_put_ue(stream,luma_log2_weight_denom);
+#endif
 
     if (luma_log2_weight_denom < 0 || luma_log2_weight_denom > 7)
         av_log(s->avctx, AV_LOG_ERROR, "luma_log2_weight_denom %d is invalid\n", luma_log2_weight_denom);
     s->sh.luma_log2_weight_denom = av_clip_uintp2(luma_log2_weight_denom, 7);
     if (s->ps.sps->chroma_format_idc != 0) {
         int delta = get_se_golomb(gb);
+#if HEVC_DECRYPT
+        kvz_bitstream_put_se(stream, delta);
+#endif
         s->sh.chroma_log2_weight_denom = av_clip_uintp2(s->sh.luma_log2_weight_denom + delta, 7);
     }
 
     for (i = 0; i < s->sh.nb_refs[L0]; i++) {
         luma_weight_l0_flag[i] = get_bits1(gb);
+#if HEVC_DECRYPT
+        kvz_bitstream_put(stream, luma_weight_l0_flag[i], 1);
+#endif
         if (!luma_weight_l0_flag[i]) {
             s->sh.luma_weight_l0[i] = 1 << s->sh.luma_log2_weight_denom;
             s->sh.luma_offset_l0[i] = 0;
         }
     }
     if (s->ps.sps->chroma_format_idc != 0) {
-        for (i = 0; i < s->sh.nb_refs[L0]; i++)
+        for (i = 0; i < s->sh.nb_refs[L0]; i++){
             chroma_weight_l0_flag[i] = get_bits1(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, chroma_weight_l0_flag[i], 1);
+#endif
+        }
     } else {
         for (i = 0; i < s->sh.nb_refs[L0]; i++)
             chroma_weight_l0_flag[i] = 0;
@@ -257,13 +275,23 @@ static void pred_weight_table(HEVCContext *s, GetBitContext *gb)
     for (i = 0; i < s->sh.nb_refs[L0]; i++) {
         if (luma_weight_l0_flag[i]) {
             int delta_luma_weight_l0 = get_se_golomb(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put_se(stream, delta_luma_weight_l0);
+#endif
             s->sh.luma_weight_l0[i] = (1 << s->sh.luma_log2_weight_denom) + delta_luma_weight_l0;
             s->sh.luma_offset_l0[i] = get_se_golomb(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put_se(stream, s->sh.luma_offset_l0[i]);
+#endif
         }
         if (chroma_weight_l0_flag[i]) {
             for (j = 0; j < 2; j++) {
                 int delta_chroma_weight_l0 = get_se_golomb(gb);
                 int delta_chroma_offset_l0 = get_se_golomb(gb);
+#if HEVC_DECRYPT
+                kvz_bitstream_put_se(stream, delta_chroma_weight_l0);
+                kvz_bitstream_put_se(stream, delta_chroma_offset_l0);
+#endif
                 s->sh.chroma_weight_l0[i][j] = (1 << s->sh.chroma_log2_weight_denom) + delta_chroma_weight_l0;
                 s->sh.chroma_offset_l0[i][j] = av_clip((delta_chroma_offset_l0 - ((128 * s->sh.chroma_weight_l0[i][j])
                                                                                     >> s->sh.chroma_log2_weight_denom) + 128), -128, 127);
@@ -278,14 +306,21 @@ static void pred_weight_table(HEVCContext *s, GetBitContext *gb)
     if (s->sh.slice_type == B_SLICE) {
         for (i = 0; i < s->sh.nb_refs[L1]; i++) {
             luma_weight_l1_flag[i] = get_bits1(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, luma_weight_l1_flag[i], 1);
+#endif
             if (!luma_weight_l1_flag[i]) {
                 s->sh.luma_weight_l1[i] = 1 << s->sh.luma_log2_weight_denom;
                 s->sh.luma_offset_l1[i] = 0;
             }
         }
         if (s->ps.sps->chroma_format_idc != 0) {
-            for (i = 0; i < s->sh.nb_refs[L1]; i++)
+            for (i = 0; i < s->sh.nb_refs[L1]; i++){
                 chroma_weight_l1_flag[i] = get_bits1(gb);
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, chroma_weight_l1_flag[i], 1);
+#endif
+            }
         } else {
             for (i = 0; i < s->sh.nb_refs[L1]; i++)
                 chroma_weight_l1_flag[i] = 0;
@@ -295,11 +330,19 @@ static void pred_weight_table(HEVCContext *s, GetBitContext *gb)
                 int delta_luma_weight_l1 = get_se_golomb(gb);
                 s->sh.luma_weight_l1[i] = (1 << s->sh.luma_log2_weight_denom) + delta_luma_weight_l1;
                 s->sh.luma_offset_l1[i] = get_se_golomb(gb);
+#if HEVC_DECRYPT
+                kvz_bitstream_put_se(stream, delta_luma_weight_l1);
+                kvz_bitstream_put_se(stream, s->sh.luma_offset_l1[i]);
+#endif
             }
             if (chroma_weight_l1_flag[i]) {
                 for (j = 0; j < 2; j++) {
                     int delta_chroma_weight_l1 = get_se_golomb(gb);
                     int delta_chroma_offset_l1 = get_se_golomb(gb);
+#if HEVC_DECRYPT
+                    kvz_bitstream_put_se(stream, delta_chroma_weight_l1);
+                    kvz_bitstream_put_se(stream, delta_chroma_offset_l1);
+#endif
                     s->sh.chroma_weight_l1[i][j] = (1 << s->sh.chroma_log2_weight_denom) + delta_chroma_weight_l1;
                     s->sh.chroma_offset_l1[i][j] = av_clip((delta_chroma_offset_l1 - ((128 * s->sh.chroma_weight_l1[i][j])
                                                                                         >> s->sh.chroma_log2_weight_denom) + 128), -128, 127);
@@ -321,6 +364,11 @@ static int decode_lt_rps(HEVCContext *s, LongTermRPS *rps, GetBitContext *gb)
     int prev_delta_msb = 0;
     unsigned int nb_sps = 0, nb_sh;
     int i;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    bitstream_t *stream = cabac->stream;
+#endif
 
     rps->nb_refs = 0;
     if (!sps->long_term_ref_pics_present_flag)
@@ -328,9 +376,15 @@ static int decode_lt_rps(HEVCContext *s, LongTermRPS *rps, GetBitContext *gb)
 
     if (sps->num_long_term_ref_pics_sps > 0) {
         nb_sps = get_ue_golomb_long(gb);
+#if HEVC_DECRYPT
+        kvz_bitstream_put_ue(stream,nb_sps);
+#endif
         print_cabac("num_long_term_sps", nb_sps);
     }
     nb_sh = get_ue_golomb_long(gb);
+#if HEVC_DECRYPT
+    kvz_bitstream_put_ue(stream, nb_sh);
+#endif
     print_cabac("num_long_term_pics", nb_sh);
 
     if (nb_sh + (uint64_t)nb_sps > FF_ARRAY_ELEMS(rps->poc))
@@ -346,6 +400,9 @@ static int decode_lt_rps(HEVCContext *s, LongTermRPS *rps, GetBitContext *gb)
 
             if (sps->num_long_term_ref_pics_sps > 1) {
                 lt_idx_sps = get_bits(gb, av_ceil_log2(sps->num_long_term_ref_pics_sps));
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, lt_idx_sps, av_ceil_log2(sps->num_long_term_ref_pics_sps));
+#endif
                 print_cabac("lt_idx_sps", lt_idx_sps);
             }
 
@@ -354,14 +411,24 @@ static int decode_lt_rps(HEVCContext *s, LongTermRPS *rps, GetBitContext *gb)
         } else {
             rps->poc[i]  = get_bits(gb, sps->log2_max_poc_lsb);
             rps->used[i] = get_bits1(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, rps->poc[i], sps->log2_max_poc_lsb);
+            kvz_bitstream_put(stream, rps->used[i], 1);
+#endif
             print_cabac("poc_lsb_lt %d \n", rps->poc[i]);
             print_cabac("used_by_curr_pic_lt_flag", rps->used[i]);
         }
 
         delta_poc_msb_present = get_bits1(gb);
+#if HEVC_DECRYPT
+        kvz_bitstream_put(stream, delta_poc_msb_present, 1);
+#endif
         print_cabac("delta_poc_msb_present_flag", delta_poc_msb_present);
         if (delta_poc_msb_present) {
             int delta = get_ue_golomb_long(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put_ue(stream, delta);
+#endif
             print_cabac("delta_poc_msb_cycle_lt", delta);
 
             if (i && i != nb_sps)
@@ -644,10 +711,19 @@ static int hls_slice_header(HEVCContext *s)
     int i, j, ret, change_pps = 0,numRef;
     int NumILRRefIdx;
     int first_slice_in_pic_flag;
+    uint32_t buf;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    bitstream_t *stream = cabac->stream;
+#endif
     print_cabac("\n --- Decode slice header --- \n", s->nuh_layer_id);
 
     // Coded parameters
     first_slice_in_pic_flag = get_bits1(gb);
+#if HEVC_DECRYPT
+    kvz_bitstream_put(stream, first_slice_in_pic_flag,1);
+#endif
     
 #if PARALLEL_SLICE
     if (IS_IRAP(s)) {
@@ -687,7 +763,10 @@ static int hls_slice_header(HEVCContext *s)
     sh->no_output_of_prior_pics_flag = 0;
     if (IS_IRAP(s)){
         sh->no_output_of_prior_pics_flag = get_bits1(gb);
-        
+#if HEVC_DECRYPT
+        kvz_bitstream_put(stream, sh->no_output_of_prior_pics_flag, 1);
+#endif
+
         print_cabac("no_output_of_prior_pics_flag", sh->no_output_of_prior_pics_flag);
         if (s->decoder_id)
             av_log(s->avctx, AV_LOG_ERROR, "IRAP %d\n", s->nal_unit_type);
@@ -697,7 +776,10 @@ static int hls_slice_header(HEVCContext *s)
         sh->no_output_of_prior_pics_flag = 1;
 
     sh->pps_id = get_ue_golomb_long(gb);
-    
+#if HEVC_DECRYPT
+    kvz_bitstream_put_ue(stream, sh->pps_id);
+#endif
+
     print_cabac("slice_pic_parameter_set_id", sh->pps_id);
     if (sh->pps_id >= MAX_PPS_COUNT || !s->ps.pps_list[sh->pps_id]) {
         av_log(s->avctx, AV_LOG_ERROR, "PPS %d does not exist.\n", sh->pps_id);
@@ -753,12 +835,19 @@ static int hls_slice_header(HEVCContext *s)
 
         if (s->ps.pps->dependent_slice_segments_enabled_flag){
             sh->dependent_slice_segment_flag = get_bits1(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, sh->dependent_slice_segment_flag, 1);
+#endif
             print_cabac("dependent_slice_segment_flag", sh->dependent_slice_segment_flag);
         }
 
         slice_address_length = av_ceil_log2(s->ps.sps->ctb_width *
                                             s->ps.sps->ctb_height);
         sh->slice_segment_addr = get_bitsz(gb, slice_address_length);
+#if HEVC_DECRYPT
+        if (slice_address_length)
+            kvz_bitstream_put(stream, sh->slice_segment_addr, slice_address_length);
+#endif
 
 #if PARALLEL_SLICE
         s1->slice_segment_addr[s->job] = sh->slice_segment_addr;
@@ -805,27 +894,39 @@ else
             int iBits = 0;
             if(s->ps.pps->num_extra_slice_header_bits > iBits) {
                 sh->discardable_flag = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, sh->discardable_flag, 1);
+#endif
+
                 //uint8_t discardable_flag = get_bits1(gb);
                 //print_cabac("discardable_flag  ", discardable_flag);
                 iBits++;
             }
             if(s->ps.pps->num_extra_slice_header_bits > iBits) {
                 sh->m_bCrossLayerBLAFlag = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, sh->m_bCrossLayerBLAFlag, 1);
+#endif
+
                 print_cabac("cross_layer_bla_flag", sh->m_bCrossLayerBLAFlag);
                 iBits++;
             }
             if(s->ps.pps->num_extra_slice_header_bits > iBits) {
                 sh->m_bPocResetFlag = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, sh->m_bPocResetFlag, 1);
+#endif
+
                 print_cabac("slice_reserved_undetermined_flag", sh->m_bPocResetFlag);
                 iBits++;
             }
         }
 
         sh->slice_type = get_ue_golomb_long(gb);
-        
+#if HEVC_DECRYPT
+        kvz_bitstream_put_ue(stream, sh->slice_type);
+#endif
+
         print_cabac("slice_type", sh->slice_type);
         if (!(sh->slice_type == I_SLICE ||
               sh->slice_type == P_SLICE ||
@@ -843,13 +944,19 @@ else
         sh->pic_output_flag = 1;
         if (s->ps.pps->output_flag_present_flag) {
             sh->pic_output_flag = get_bits1(gb);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, sh->pic_output_flag, 1);
+#endif
+
             print_cabac("pic_output_flag", sh->pic_output_flag);
         }
 
         if (s->ps.sps->separate_colour_plane_flag) {
             sh->colour_plane_id = get_bits(gb, 2);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, sh->colour_plane_id, 2);
+#endif
+
             print_cabac("pic_output_flag", sh->pic_output_flag);
         }
         print_cabac("s->nal_unit_type", s->nal_unit_type);
@@ -859,7 +966,10 @@ else
             int poc;
 
             sh->pic_order_cnt_lsb = get_bits(gb, s->ps.sps->log2_max_poc_lsb);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, sh->pic_order_cnt_lsb, s->ps.sps->log2_max_poc_lsb);
+#endif
+
             print_cabac("pic_order_cnt_lsb", sh->pic_order_cnt_lsb);
             poc = ff_hevc_compute_poc(s, sh->pic_order_cnt_lsb);
             if (!sh->first_slice_in_pic_flag && poc != s->poc) {
@@ -883,12 +993,20 @@ else
         if(!IS_IDR(s)) {
             int pos;
             sh->short_term_ref_pic_set_sps_flag = get_bits1(gb);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, sh->short_term_ref_pic_set_sps_flag, 1);
+#endif
+
             pos = get_bits_left(gb);
             
             print_cabac("short_term_ref_pic_set_sps_flag", sh->short_term_ref_pic_set_sps_flag);
             if (!sh->short_term_ref_pic_set_sps_flag) {
+#if HEVC_DECRYPT
+                // TODO : use the same function to avoid code duplication
+                ret = ff_hevc_decode_short_term_rps_decrypt(stream, gb, s->avctx, &sh->slice_rps, s->ps.sps, 1);
+#else
                 ret = ff_hevc_decode_short_term_rps(gb, s->avctx, &sh->slice_rps, s->ps.sps, 1);
+#endif
                 if (ret < 0)
                     return ret;
 
@@ -903,7 +1021,10 @@ else
 
                 numbits = av_ceil_log2(s->ps.sps->num_short_term_rps);
                 rps_idx = numbits > 0 ? get_bits(gb, numbits) : 0;
-                
+                if(rps_idx)
+#if HEVC_DECRYPT
+                    kvz_bitstream_put(stream, rps_idx, numbits);
+#endif
                 print_cabac("short_term_ref_pic_set_idx", rps_idx);
                 sh->short_term_rps = &s->ps.sps->st_rps[rps_idx];
             }
@@ -923,7 +1044,10 @@ else
 
             if (s->ps.sps->sps_temporal_mvp_enabled_flag) {
                 sh->slice_temporal_mvp_enabled_flag = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, sh->slice_temporal_mvp_enabled_flag, 1);
+#endif
+
                 print_cabac("slice_temporal_mvp_enable_flag", sh->slice_temporal_mvp_enabled_flag);
             } else
                 sh->slice_temporal_mvp_enabled_flag = 0;
@@ -948,7 +1072,10 @@ else
 
         if (s->nuh_layer_id > 0 && !s->ps.vps->vps_ext.all_ref_layers_active_flag && NumILRRefIdx>0) {
             s->sh.inter_layer_pred_enabled_flag = get_bits1(gb);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, s->sh.inter_layer_pred_enabled_flag, 1);
+#endif
+
             print_cabac("inter_layer_pred_enabled_flag", s->sh.inter_layer_pred_enabled_flag );
             if (s->sh.inter_layer_pred_enabled_flag) {
                 if (NumILRRefIdx>1)  {
@@ -957,8 +1084,12 @@ else
                         numBits++;
                     }
                     if (!s->ps.vps->vps_ext.max_one_active_ref_layer_flag) {
-                        s->sh.active_num_ILR_ref_idx = get_bits(gb, numBits) + 1;
-                        
+                        buf = get_bits(gb, numBits);
+                        s->sh.active_num_ILR_ref_idx = buf + 1;
+#if HEVC_DECRYPT
+                        kvz_bitstream_put(stream, buf, numBits);
+#endif
+
                         print_cabac("num_inter_layer_ref_pics_minus1", s->sh.active_num_ILR_ref_idx);
                     } else {
                         for(i=0 ; i < NumILRRefIdx; i++ ) {
@@ -975,7 +1106,10 @@ else
                     } else
                         for (i = 0; i < s->sh.active_num_ILR_ref_idx; i++ ) {
                             s->sh.inter_layer_pred_layer_idc[i] =  get_bits(gb, numBits);
-                            
+#if HEVC_DECRYPT
+                            kvz_bitstream_put(stream, s->sh.inter_layer_pred_layer_idc[i], numBits);
+#endif
+
                             print_cabac("inter_layer_pred_layer_idc", s->sh.inter_layer_pred_layer_idc[i]);
                         }
                 } else {
@@ -1006,7 +1140,10 @@ else
         if (s->ps.sps->sao_enabled_flag) {
             enum ChromaFormat format;
             sh->slice_sample_adaptive_offset_flag[0] = get_bits1(gb);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, sh->slice_sample_adaptive_offset_flag[0], 1);
+#endif
+
             print_cabac("slice_sao_luma_flag", sh->slice_sample_adaptive_offset_flag[0]);
             if(!s->nuh_layer_id) {
                 format = s->ps.sps->chroma_format_idc;
@@ -1017,7 +1154,10 @@ else
             if (format != CHROMA_400)  {
                 sh->slice_sample_adaptive_offset_flag[1] =
                 sh->slice_sample_adaptive_offset_flag[2] = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, sh->slice_sample_adaptive_offset_flag[2], 1);
+#endif
+
                 print_cabac("slice_sao_chroma_flag", sh->slice_sample_adaptive_offset_flag[2]);
             } else {
                 // sh->slice_sample_adaptive_offset_flag[0] = 0;
@@ -1034,14 +1174,25 @@ else
             if (sh->slice_type == B_SLICE)
                 sh->nb_refs[L1] = s->ps.pps->num_ref_idx_l1_default_active;
             num_ref_idx_active_override_flag = get_bits1(gb);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, num_ref_idx_active_override_flag, 1);
+#endif
+
             print_cabac("num_ref_idx_active_override_flag", num_ref_idx_active_override_flag);
             if (num_ref_idx_active_override_flag) { // num_ref_idx_active_override_flag
-                sh->nb_refs[L0] = get_ue_golomb_long(gb) + 1;
+                buf = get_ue_golomb_long(gb);
+#if HEVC_DECRYPT
+                kvz_bitstream_put_ue(stream, buf);
+#endif
+                sh->nb_refs[L0] = buf + 1;
                 
                 print_cabac("num_ref_idx_l0_active_minus1", sh->nb_refs[L0] -1);
                 if (sh->slice_type == B_SLICE) {
-                    sh->nb_refs[L1] = get_ue_golomb_long(gb) + 1;
+                    buf = get_ue_golomb_long(gb);
+#if HEVC_DECRYPT
+                    kvz_bitstream_put_ue(stream, buf);
+#endif
+                    sh->nb_refs[L1] = buf + 1;
                     
                     print_cabac("num_ref_idx_l1_active_minus1", sh->nb_refs[L1]-1);
                 }
@@ -1063,24 +1214,36 @@ else
             print_cabac("lists_modification_present_flag", s->ps.pps->lists_modification_present_flag);
             if (s->ps.pps->lists_modification_present_flag && nb_refs > 1) {
                 sh->rpl_modification_flag[0] = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, sh->rpl_modification_flag[0], 1);
+#endif
+
                 print_cabac("ref_pic_list_modification_flag_l0", sh->rpl_modification_flag[0]);
                 if (sh->rpl_modification_flag[0]) {
                     for (i = 0; i < sh->nb_refs[L0]; i++) {
                         sh->list_entry_lx[0][i] = get_bits(gb, av_ceil_log2(nb_refs));
-                        
+#if HEVC_DECRYPT
+                        kvz_bitstream_put(stream, sh->list_entry_lx[0][i], av_ceil_log2(nb_refs));
+#endif
+
                         print_cabac("list_entry_l0", sh->list_entry_lx[0][i]);
                     }
                 }
 
                 if (sh->slice_type == B_SLICE) {
                     sh->rpl_modification_flag[1] = get_bits1(gb);
-                    
+#if HEVC_DECRYPT
+                    kvz_bitstream_put(stream, sh->rpl_modification_flag[1], 1);
+#endif
+
                     print_cabac("ref_pic_list_modification_flag_l1", sh->rpl_modification_flag[1]);
                     if (sh->rpl_modification_flag[1] == 1)
                         for (i = 0; i < sh->nb_refs[L1]; i++) {
                             sh->list_entry_lx[1][i] = get_bits(gb, av_ceil_log2(nb_refs));
-                            
+#if HEVC_DECRYPT
+                            kvz_bitstream_put(stream, sh->list_entry_lx[1][i], av_ceil_log2(nb_refs));
+#endif
+
                             print_cabac("list_entry_l1", sh->list_entry_lx[1][i]);
                         }
                 }
@@ -1088,13 +1251,19 @@ else
 
             if (sh->slice_type == B_SLICE) {
                 sh->mvd_l1_zero_flag = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, sh->mvd_l1_zero_flag, 1);
+#endif
+
                 print_cabac("mvd_l1_zero_flag", sh->mvd_l1_zero_flag);
             }
 
             if (s->ps.pps->cabac_init_present_flag) {
                 sh->cabac_init_flag = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, sh->cabac_init_flag, 1);
+#endif
+
                 print_cabac("cabac_init_flag", sh->cabac_init_flag);
             } else
                 sh->cabac_init_flag = 0;
@@ -1103,14 +1272,21 @@ else
             if (sh->slice_temporal_mvp_enabled_flag) {
                 sh->collocated_list = L0;
                 if (sh->slice_type == B_SLICE) {
-                    sh->collocated_list = !get_bits1(gb);
+                    buf = get_bits1(gb);
+#if HEVC_DECRYPT
+                    kvz_bitstream_put(stream, buf, 1);
+#endif
+                    sh->collocated_list = !buf;
                     
                     print_cabac("collocated_from_l0_flag", sh->collocated_list);
                 }
 
                 if (sh->nb_refs[sh->collocated_list] > 1) {
                     sh->collocated_ref_idx = get_ue_golomb_long(gb);
-                    
+#if HEVC_DECRYPT
+                    kvz_bitstream_put_ue(stream, sh->collocated_ref_idx);
+#endif
+
                     print_cabac("collocated_ref_idx", sh->collocated_ref_idx);
                     if (sh->collocated_ref_idx >= sh->nb_refs[sh->collocated_list]) {
                         av_log(s->avctx, AV_LOG_ERROR,
@@ -1126,7 +1302,11 @@ else
                 pred_weight_table(s, gb);
             }
 
-            sh->max_num_merge_cand = 5 - get_ue_golomb_long(gb);
+            buf = get_ue_golomb_long(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put_ue(stream, buf);
+#endif
+            sh->max_num_merge_cand = 5 - buf;
             
             print_cabac("five_minus_max_num_merge_cand", 5-sh->max_num_merge_cand);
             if (sh->max_num_merge_cand < 1 || sh->max_num_merge_cand > 5) {
@@ -1138,14 +1318,23 @@ else
         }
 
         sh->slice_qp_delta = get_se_golomb(gb);
-        
+#if HEVC_DECRYPT
+        kvz_bitstream_put_se(stream, sh->slice_qp_delta);
+#endif
+
         print_cabac("slice_qp_delta", sh->slice_qp_delta);
         if (s->ps.pps->pps_slice_chroma_qp_offsets_present_flag) {
             sh->slice_cb_qp_offset = get_se_golomb(gb);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put_se(stream, sh->slice_cb_qp_offset);
+#endif
+
             print_cabac("slice_qp_delta_cb", sh->slice_cb_qp_offset);
             sh->slice_cr_qp_offset = get_se_golomb(gb);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put_se(stream, sh->slice_cr_qp_offset);
+#endif
+
             print_cabac("slice_qp_delta_cr", sh->slice_cr_qp_offset);
         } else {
             sh->slice_cb_qp_offset = 0;
@@ -1154,6 +1343,9 @@ else
 
         if (s->ps.pps->chroma_qp_offset_list_enabled_flag){
             sh->cu_chroma_qp_offset_enabled_flag = get_bits1(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, sh->cu_chroma_qp_offset_enabled_flag, 1);
+#endif
             
         } else
             sh->cu_chroma_qp_offset_enabled_flag = 0;
@@ -1163,19 +1355,33 @@ else
 
             if (s->ps.pps->deblocking_filter_override_enabled_flag) {
                 deblocking_filter_override_flag = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, deblocking_filter_override_flag, 1);
+#endif
+
                 print_cabac("deblocking_filter_override_flag", deblocking_filter_override_flag);
             }
 
             if (deblocking_filter_override_flag) {
                 sh->disable_deblocking_filter_flag = get_bits1(gb);
-                
+#if HEVC_DECRYPT
+                kvz_bitstream_put(stream, sh->disable_deblocking_filter_flag, 1);
+#endif
+
                 print_cabac("slice_disable_deblocking_filter_flag", sh->disable_deblocking_filter_flag);
                 if (!sh->disable_deblocking_filter_flag) {
-                    sh->beta_offset = get_se_golomb(gb) * 2;
+                    buf = get_se_golomb(gb);
+#if HEVC_DECRYPT
+                    kvz_bitstream_put_se(stream, buf);
+#endif
+                    sh->beta_offset = buf * 2;
                     
                     print_cabac("slice_beta_offset_div2", sh->beta_offset);
-                    sh->tc_offset   = get_se_golomb(gb) * 2;
+                    buf = get_se_golomb(gb);
+#if HEVC_DECRYPT
+                    kvz_bitstream_put_se(stream, buf);
+#endif
+                    sh->tc_offset   = buf * 2;
                     
                     print_cabac("slice_tc_offset_div2", sh->tc_offset);
                 }
@@ -1195,7 +1401,10 @@ else
              sh->slice_sample_adaptive_offset_flag[1] ||
              !sh->disable_deblocking_filter_flag)) {
             sh->slice_loop_filter_across_slices_enabled_flag = get_bits1(gb);
-            
+#if HEVC_DECRYPT
+            kvz_bitstream_put(stream, sh->slice_loop_filter_across_slices_enabled_flag, 1);
+#endif
+
             print_cabac("slice_loop_filter_across_slices_enabled_flag", sh->slice_loop_filter_across_slices_enabled_flag);
         } else {
             sh->slice_loop_filter_across_slices_enabled_flag = s->ps.pps->pps_loop_filter_across_slices_enabled_flag;
@@ -1208,7 +1417,10 @@ else
     sh->num_entry_point_offsets = 0;
     if (s->ps.pps->tiles_enabled_flag || s->ps.pps->entropy_coding_sync_enabled_flag) {
         sh->num_entry_point_offsets = get_ue_golomb_long(gb);
-        
+#if HEVC_DECRYPT
+        kvz_bitstream_put_ue(stream, sh->num_entry_point_offsets);
+#endif
+
         print_cabac("num_entry_point_offsets", sh->num_entry_point_offsets);
         if(s->ps.pps->entropy_coding_sync_enabled_flag) {
             if(sh->num_entry_point_offsets < 0) {
@@ -1228,7 +1440,11 @@ else
             }
         }
         if (sh->num_entry_point_offsets > 0) {
-            int offset_len = get_ue_golomb_long(gb) + 1;
+            buf = get_ue_golomb_long(gb);
+#if HEVC_DECRYPT
+            kvz_bitstream_put_ue(stream, buf);
+#endif
+            int offset_len = buf + 1;
             
             int segments = offset_len >> 4;
             int rest = (offset_len & 15);
@@ -1248,12 +1464,20 @@ else
                 int val = 0;
                 for (j = 0; j < segments; j++) {
                     val <<= 16;
-                    val += get_bits(gb, 16);
+                    buf = get_bits(gb, 16);
+#if HEVC_DECRYPT
+                    kvz_bitstream_put(stream,buf,16);
+#endif
+                    val += buf;
                     
                 }
                 if (rest) {
                     val <<= rest;
-                    val += get_bits(gb, rest);
+                    buf = get_bits(gb, rest);
+#if HEVC_DECRYPT
+                    kvz_bitstream_put(stream, buf, rest);
+#endif
+                    val += buf;
                     
                 }
                 sh->entry_point_offset[i] = val + 1; // +1; // +1 to get the size
@@ -1270,7 +1494,10 @@ else
 
     if (s->ps.pps->slice_segment_header_extension_present_flag) {
         unsigned int length = get_ue_golomb_long(gb);
-        
+#if HEVC_DECRYPT
+        kvz_bitstream_put_ue(stream, length);
+#endif
+
         if (length*8LL > get_bits_left(gb)) {
             av_log(s->avctx, AV_LOG_ERROR, "too many slice_header_extension_data_bytes\n");
             return AVERROR_INVALIDDATA;

@@ -1619,6 +1619,11 @@ typedef struct HEVCContext {
 int ff_hevc_decode_short_term_rps(GetBitContext *gb, AVCodecContext *avctx,
                                   ShortTermRPS *rps, const HEVCSPS *sps, int is_slice_header);
 
+#if HEVC_DECRYPT
+int ff_hevc_decode_short_term_rps_decrypt(bitstream_t *stream, GetBitContext *gb, AVCodecContext *avctx,
+                                          ShortTermRPS *rps, const HEVCSPS *sps, int is_slice_header);
+#endif
+
 /**
  * Parse the SPS from the bitstream into the provided HEVCSPS struct.
  *
