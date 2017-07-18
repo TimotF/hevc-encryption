@@ -3549,15 +3549,31 @@ static int hls_slice_data(HEVCContext *s, const uint8_t *nal, int length)
 static int hls_nal_unit(HEVCContext *s)
 {
     int ret;
+    uint32_t buf;
     GetBitContext *gb = &s->HEVClc->gb;
-
-    if (get_bits1(gb) != 0)
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    bitstream_t *stream = cabac->stream;
+#endif
+    buf = get_bits1(gb);
+#if HEVC_DECRYPT
+    kvz_bitstream_put(stream,buf,1);
+#endif
+    if (buf != 0) 
         return AVERROR_INVALIDDATA;
 
     s->nal_unit_type = get_bits(gb, 6);
     ret              = get_bits(gb, 6);
-
-    s->temporal_id = get_bits(gb, 3) - 1;
+#if HEVC_DECRYPT
+    kvz_bitstream_put(stream, s->nal_unit_type, 6);
+    kvz_bitstream_put(stream, ret, 6);
+#endif
+    buf = get_bits(gb, 3);
+#if HEVC_DECRYPT
+    kvz_bitstream_put(stream, buf, 3);
+#endif
+    s->temporal_id = buf - 1;
     if (s->temporal_id < 0)
         return AVERROR_INVALIDDATA;
     av_log(s->avctx, AV_LOG_DEBUG,
