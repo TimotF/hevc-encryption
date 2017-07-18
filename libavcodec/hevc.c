@@ -3784,21 +3784,26 @@ static int hls_nal_unit(HEVCContext *s)
     bitstream_t *stream = cabac->stream;
 #endif
     buf = get_bits1(gb);
-#if HEVC_DECRYPT
-    kvz_bitstream_put(stream,buf,1);
-#endif
     if (buf != 0) 
         return AVERROR_INVALIDDATA;
 
     s->nal_unit_type = get_bits(gb, 6);
     ret              = get_bits(gb, 6);
 #if HEVC_DECRYPT
-    kvz_bitstream_put(stream, s->nal_unit_type, 6);
-    kvz_bitstream_put(stream, ret, 6);
+    if (s->nal_unit_type != NAL_VPS && s->nal_unit_type != NAL_SPS && s->nal_unit_type != NAL_PPS 
+    && s->nal_unit_type != NAL_SEI_PREFIX && s->nal_unit_type != NAL_SEI_SUFFIX){
+        kvz_bitstream_put(stream, buf, 1);
+        kvz_bitstream_put(stream, s->nal_unit_type, 6);
+        kvz_bitstream_put(stream, ret, 6);
+    }
+        
 #endif
     buf = get_bits(gb, 3);
 #if HEVC_DECRYPT
-    kvz_bitstream_put(stream, buf, 3);
+if (s->nal_unit_type != NAL_VPS && s->nal_unit_type != NAL_SPS && s->nal_unit_type != NAL_PPS 
+    && s->nal_unit_type != NAL_SEI_PREFIX && s->nal_unit_type != NAL_SEI_SUFFIX){
+        kvz_bitstream_put(stream, buf, 3);
+    }
 #endif
     s->temporal_id = buf - 1;
     if (s->temporal_id < 0)
@@ -4741,8 +4746,14 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
 #if HEVC_DECRYPT
     #if VERBOSE
         printf("saving start_nal_code in buffer\n");
-    #endif
         if(size_start_code){
+            printf("------------start_code-----------\n");
+            int indx;
+            for (indx = 0; indx < size_start_code[i];indx++){
+                printf("%02x ", nal_start_code[i][indx]);
+            }
+            printf("\n----------------------------------\n");
+    #endif
             memcpy(packet_buffer + packet_length, nal_start_code[i], size_start_code[i]);
             packet_length += size_start_code[i];
         }
