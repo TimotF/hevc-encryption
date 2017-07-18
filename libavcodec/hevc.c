@@ -4197,7 +4197,7 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
     int i,  consumed, ret = 0;
     int nb_start_bytes = 0;
     int skipped_bytes = 0;
-
+    
     int length = *data_length;  // the initial length of the buffer
 
     uint8_t *buf = NULL; // copy of the initial buffer 
@@ -4213,6 +4213,8 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
     int packet_length = 0;  // the length of the new buffer
 
 #if HEVC_DECRYPT
+    uint8_t **nal_start_code = NULL;
+    uint8_t *size_start_code = NULL;
     #if VERBOSE
         printf("init bitstream\n");
     #endif
@@ -4325,23 +4327,81 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         if (ret < 0)
             goto fail;
         ret = hls_nal_unit(s);
-
-        int j,start,size;
-        start = (*(data_length)-length)-nb_start_bytes;
-        size = (nal->size)+nb_start_bytes+s->skipped_bytes;
+#if HEVC_DECRYPT
+        int j,offset;
+        if (!size_start_code){
+            size_start_code = (uint8_t*)malloc(sizeof(uint8_t));
+            nal_start_code = (uint8_t**)malloc(sizeof(uint8_t*));
+            if (!size_start_code){
+                fprintf(stderr, "error while allocating size_start_code\n");
+                exit(1);
+            }
+            if (!nal_start_code){
+                fprintf(stderr, "error while allocating nal_start_code\n");
+                exit(1);
+            }
+        } else {
+            size_start_code = (uint8_t *)realloc(size_start_code, s->nb_nals * sizeof(uint8_t));
+            nal_start_code = (uint8_t **)realloc(nal_start_code, s->nb_nals * sizeof(uint8_t *));
+            if (!size_start_code){
+                fprintf(stderr, "error while reallocating size_start_code\n");
+                exit(1);
+            }
+            if (!nal_start_code){
+                fprintf(stderr, "error while reallocating nal_start_code\n");
+                exit(1);
+            }
+        }
+            offset = (*(data_length)-length) - nb_start_bytes;
         switch(s->nal_unit_type){
             case NAL_VPS:
             case NAL_SPS:
             case NAL_PPS:
             case NAL_SEI_PREFIX:
             case NAL_SEI_SUFFIX:
+                // copy of the entire NAL
+                size_start_code[s->nb_nals-1] = (nal->size) + nb_start_bytes + s->skipped_bytes;
+                nal_start_code[s->nb_nals-1] = (uint8_t*)malloc(size_start_code[s->nb_nals-1]);
+                if (!nal_start_code[s->nb_nals-1]){
+                    fprintf(stderr, "error while allocating nal_start_code[%d]\n",s->nb_nals-1);
+                    exit(1);
+                }
+                /*
                 if(*data_length<packet_length+size)
                     packet_buffer = av_realloc(packet_buffer,packet_length+size);
-                memcpy(packet_buffer+packet_length,initial_buf+start,size);
-                packet_length += size;
+                memcpy(packet_buffer+packet_length,initial_buf+offset,size);
+                packet_length += size;*/
+                memcpy(nal_start_code[s->nb_nals - 1], initial_buf + offset, size_start_code[s->nb_nals - 1]);
+                break;
+            case NAL_TRAIL_N:
+            case NAL_TRAIL_R:
+            case NAL_TSA_N:
+            case NAL_TSA_R:
+            case NAL_STSA_N:
+            case NAL_STSA_R:
+            case NAL_RADL_N:
+            case NAL_RADL_R:
+            case NAL_RASL_N:
+            case NAL_RASL_R:
+            case NAL_BLA_W_LP:
+            case NAL_BLA_W_RADL:
+            case NAL_BLA_N_LP:
+            case NAL_IDR_W_RADL:
+            case NAL_IDR_N_LP:
+            case NAL_CRA_NUT:
+                // copy of the start byte sequence only
+                size_start_code[s->nb_nals - 1] = nb_start_bytes;
+                nal_start_code[s->nb_nals - 1] = (uint8_t *)malloc(size_start_code[s->nb_nals - 1]);
+                if (!nal_start_code[s->nb_nals - 1])
+                {
+                    fprintf(stderr, "error while allocating nal_start_code[%d]\n", s->nb_nals - 1);
+                    exit(1);
+                }
+                memcpy(nal_start_code[s->nb_nals - 1], initial_buf + offset, size_start_code[s->nb_nals - 1]);
                 break;
         }
         nb_start_bytes = 0;
+#endif //HEVC_DECRYPT
         
 
 #if PARALLEL_SLICE
@@ -4437,7 +4497,15 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         }
 #if HEVC_DECRYPT
     #if VERBOSE
-        int len_out = kvz_bitstream_tell(lc->ccc.stream)/8;
+        printf("saving start_nal_code in buffer\n");
+    #endif
+        if(size_start_code){
+            memcpy(packet_buffer + packet_length, nal_start_code[i], size_start_code[i]);
+            packet_length += size_start_code[i];
+        }
+
+        int len_out = kvz_bitstream_tell(lc->ccc.stream) / 8;
+    #if VERBOSE
         printf("saving nal in buffer (%d bits)\n", kvz_bitstream_tell(lc->ccc.stream));
     #endif
         
@@ -4465,13 +4533,20 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         printf("saving done\n");
     #endif 
 
-#endif
-
-
-
-
+#endif // HEVC_DECRYPT
     }
-#endif
+
+#if HEVC_DECRYPT
+    //free size_start_code & nal_start_code
+    if(size_start_code){
+        for(i=0;i<s->nb_nals;i++){
+            free(nal_start_code[i]);
+        }
+        free(nal_start_code);
+        free(size_start_code);
+    }
+#endif  // HEVC_DECRYPT
+#endif  // PARALLEL_SLICE
 
     *data_length = packet_length;
     *data = packet_buffer;

@@ -122,7 +122,7 @@ void kvz_cabac_write_unary_max_symbol_ep(cabac_data_t *data, unsigned int symbol
 #define CTX_UPDATE_LPS(ctx) { (ctx)->uc_state = kvz_g_auc_next_state_lps[ (ctx)->uc_state ]; }
 #define CTX_UPDATE_MPS(ctx) { (ctx)->uc_state = kvz_g_auc_next_state_mps[ (ctx)->uc_state ]; }
 
-#ifdef VERBOSE
+#ifdef CABAC_VERBOSE
   #define CABAC_BIN(data, value, name) { \
     uint32_t prev_state = (data)->cur_ctx->uc_state; \
     kvz_cabac_encode_bin((data), (value)); \
