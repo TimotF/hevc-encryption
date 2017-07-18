@@ -761,11 +761,21 @@ uint8_t ff_hevc_sao_band_position_decode(HEVCContext *s)
 
 uint8_t ff_hevc_sao_offset_abs_decode(HEVCContext *s)
 {
-    int i = 0;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
+    int i = 0, bin = 1;
     int length = (1 << (FFMIN(s->ps.sps->bit_depth[CHANNEL_TYPE_LUMA], 10) - 5)) - 1;
 
-    while (i < length && get_cabac_bypass(&s->HEVClc->cc))
-        i++;
+    while (i < length && bin){
+        bin=get_cabac_bypass(&s->HEVClc->cc);
+        if(bin)
+            i++;
+#if HEVC_DECRYPT
+        CABAC_BIN_EP(cabac, bin, "sao_offset_abs");
+#endif
+    }
     return i;
 }
 
