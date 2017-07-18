@@ -811,7 +811,13 @@ uint8_t ff_hevc_sao_eo_class_decode(HEVCContext *s)
 
 int ff_hevc_end_of_slice_flag_decode(HEVCContext *s)
 {
-    return get_cabac_terminate(&s->HEVClc->cc);
+    int bin = get_cabac_terminate(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    kvz_cabac_encode_bin_trm(cabac,bin);
+#endif
+    return bin;
 }
 
 int ff_hevc_cu_transquant_bypass_flag_decode(HEVCContext *s)
