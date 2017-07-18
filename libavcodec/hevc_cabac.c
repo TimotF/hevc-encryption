@@ -781,7 +781,13 @@ uint8_t ff_hevc_sao_offset_abs_decode(HEVCContext *s)
 
 uint8_t ff_hevc_sao_offset_sign_decode(HEVCContext *s)
 {
-    return get_cabac_bypass(&s->HEVClc->cc);
+    int bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    CABAC_BIN_EP(cabac, bin, "sao_offset_sign");
+#endif
+    return bin;
 }
 
 uint8_t ff_hevc_sao_eo_class_decode(HEVCContext *s)
