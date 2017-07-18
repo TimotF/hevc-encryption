@@ -743,11 +743,19 @@ int ff_hevc_sao_type_idx_decode(HEVCContext *s)
 
 uint8_t ff_hevc_sao_band_position_decode(HEVCContext *s)
 {
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
     int i;
     int value = get_cabac_bypass(&s->HEVClc->cc);
 
     for (i = 0; i < 4; i++)
         value = (value << 1) | get_cabac_bypass(&s->HEVClc->cc);
+
+#if HEVC_DECRYPT
+    CABAC_BINS_EP(cabac, value, 5, "sao_band_position");
+#endif
     return value;
 }
 
