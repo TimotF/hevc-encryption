@@ -1176,7 +1176,14 @@ int ff_hevc_no_residual_syntax_flag_decode(HEVCContext *s)
 
 static av_always_inline int abs_mvd_greater0_flag_decode(HEVCContext *s)
 {
-    return GET_CABAC(elem_offset[ABS_MVD_GREATER0_FLAG]);
+    int bin = GET_CABAC(elem_offset[ABS_MVD_GREATER0_FLAG]);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.cu_mvd_model[0]);
+    CABAC_BIN(cabac, bin, "mvd_greater0_flag");
+#endif
+    return bin;
 }
 
 static av_always_inline int abs_mvd_greater1_flag_decode(HEVCContext *s)
