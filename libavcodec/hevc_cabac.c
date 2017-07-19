@@ -1105,10 +1105,23 @@ int ff_hevc_intra_chroma_pred_mode_decode(HEVCContext *s)
 int ff_hevc_merge_idx_decode(HEVCContext *s)
 {
     int i = GET_CABAC(elem_offset[MERGE_IDX]);
+    int bin = 1;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.cu_merge_idx_ext_model);
+    CABAC_BIN(cabac, i, "merge_idx");
+#endif
 
     if (i != 0) {
-        while (i < s->sh.max_num_merge_cand-1 && get_cabac_bypass(&s->HEVClc->cc))
-            i++;
+        while (i < s->sh.max_num_merge_cand-1 && bin){
+            bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+            CABAC_BIN_EP(cabac, bin, "merge_idx");
+#endif
+            if(bin)
+                i++;
+        }
     }
     return i;
 }
