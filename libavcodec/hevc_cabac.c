@@ -1222,21 +1222,43 @@ static av_always_inline int mvd_decode(HEVCContext *s)
 {
     int ret = 2;
     int k = 1;
+    int bin = 1;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
+
 #if HEVC_ENCRYPTION
     if( s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MVs))
       return mvd_decode_enc (s);
 #endif
-    while (k < CABAC_MAX_BIN && get_cabac_bypass(&s->HEVClc->cc)) {
-        ret += 1 << k;
-        k++;
+    while (k < CABAC_MAX_BIN && bin) {
+        bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+        CABAC_BIN_EP(cabac, bin, "mvd");
+#endif
+        if(bin){
+            ret += 1 << k;
+            k++;
+        }
     }
     if (k == CABAC_MAX_BIN) {
         av_log(s->avctx, AV_LOG_ERROR, "CABAC_MAX_BIN : %d\n", k);
         return 0;
     }
-    while (k--)
-        ret += get_cabac_bypass(&s->HEVClc->cc) << k;
-    return get_cabac_bypass_sign(&s->HEVClc->cc, -ret);
+    while (k--){
+        bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+        CABAC_BIN_EP(cabac, bin, "mvd");
+#endif
+        ret += bin << k;
+    }
+    bin = get_cabac_bypass_sign(&s->HEVClc->cc, -ret);
+#if HEVC_DECRYPT
+    uint32_t mvd_sign = (bin > 0) ? 0 : 1;
+    CABAC_BIN_EP(cabac, mvd_sign, "mvd_sign");
+#endif
+    return bin;
 }
 
 int ff_hevc_split_transform_flag_decode(HEVCContext *s, int log2_trafo_size)
