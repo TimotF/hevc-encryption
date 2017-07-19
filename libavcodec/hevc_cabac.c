@@ -822,7 +822,14 @@ int ff_hevc_end_of_slice_flag_decode(HEVCContext *s)
 
 int ff_hevc_cu_transquant_bypass_flag_decode(HEVCContext *s)
 {
-    return GET_CABAC(elem_offset[CU_TRANSQUANT_BYPASS_FLAG]);
+    int bin = GET_CABAC(elem_offset[CU_TRANSQUANT_BYPASS_FLAG]);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &cabac->ctx.cu_transquant_bypass;
+    CABAC_BIN(cabac, bin, "cu_transquant_bypass_flag");
+#endif
+    return bin;
 }
 
 int ff_hevc_skip_flag_decode(HEVCContext *s, int x0, int y0, int x_cb, int y_cb)
