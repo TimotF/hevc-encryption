@@ -1342,7 +1342,14 @@ int ff_hevc_cbf_cb_cr_decode(HEVCContext *s, int trafo_depth)
 
 int ff_hevc_cbf_luma_decode(HEVCContext *s, int trafo_depth)
 {
-    return GET_CABAC(elem_offset[CBF_LUMA] + !trafo_depth);
+    int bin = GET_CABAC(elem_offset[CBF_LUMA] + !trafo_depth);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.qt_cbf_model_luma[!trafo_depth]);
+    CABAC_BIN(cabac, bin, "cbf_luma");
+#endif
+    return bin;
 }
 
 static int ff_hevc_transform_skip_flag_decode(HEVCContext *s, int c_idx)
