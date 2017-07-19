@@ -987,6 +987,10 @@ int ff_hevc_split_coding_unit_flag_decode(HEVCContext *s, int ct_depth, int x0, 
     int y0b  = av_mod_uintp2(y0, s->ps.sps->log2_ctb_size);
     int x_cb = x0 >> s->ps.sps->log2_min_cb_size;
     int y_cb = y0 >> s->ps.sps->log2_min_cb_size;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
 
     if (s->HEVClc->ctb_left_flag || x0b)
         depth_left = s->tab_ct_depth[(y_cb) * s->ps.sps->min_cb_width + x_cb - 1];
@@ -996,7 +1000,13 @@ int ff_hevc_split_coding_unit_flag_decode(HEVCContext *s, int ct_depth, int x0, 
     inc += (depth_left > ct_depth);
     inc += (depth_top  > ct_depth);
 
-    return GET_CABAC(elem_offset[SPLIT_CODING_UNIT_FLAG] + inc);
+    int bin = GET_CABAC(elem_offset[SPLIT_CODING_UNIT_FLAG] + inc);
+#if HEVC_DECRYPT
+    cabac->cur_ctx = &(cabac->ctx.split_flag_model[inc]);
+    CABAC_BIN(cabac, bin, "split_coding_unit_flag");
+#endif
+
+    return bin;
 }
 
 int ff_hevc_part_mode_decode(HEVCContext *s, int log2_cb_size)
