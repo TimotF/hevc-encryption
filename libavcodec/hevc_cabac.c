@@ -904,7 +904,13 @@ int ff_hevc_cu_qp_delta_abs(HEVCContext *s)
 
 int ff_hevc_cu_qp_delta_sign_flag(HEVCContext *s)
 {
-    return get_cabac_bypass(&s->HEVClc->cc);
+    int bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    CABAC_BIN_EP(cabac, bin, "cu_qp_delta_sign_flag");
+#endif
+    return bin;
 }
 
 int ff_hevc_cu_chroma_qp_offset_flag(HEVCContext *s)
