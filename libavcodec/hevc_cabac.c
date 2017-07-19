@@ -1049,7 +1049,14 @@ int ff_hevc_pcm_flag_decode(HEVCContext *s)
 
 int ff_hevc_prev_intra_luma_pred_flag_decode(HEVCContext *s)
 {
-    return GET_CABAC(elem_offset[PREV_INTRA_LUMA_PRED_FLAG]);
+    int bin = GET_CABAC(elem_offset[PREV_INTRA_LUMA_PRED_FLAG]);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.intra_mode_model);
+    CABAC_BIN(cabac, bin, "prev_intra_luma_pred_flag");
+#endif
+    return bin;
 }
 
 int ff_hevc_mpm_idx_decode(HEVCContext *s)
@@ -1202,7 +1209,7 @@ static av_always_inline int mvd_sign_flag_decode(HEVCContext *s)
 {
     CABACContext *c = &s->HEVClc->cc;
     int bin = get_cabac_bypass_sign(c, -1);
-    
+
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
