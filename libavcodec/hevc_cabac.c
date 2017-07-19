@@ -1528,12 +1528,26 @@ static av_always_inline int significant_coeff_flag_decode(HEVCContext *s, int x_
                                            int offset, const uint8_t *ctx_idx_map)
 {
     int inc = ctx_idx_map[(y_c << 2) + x_c] + offset;
-    return GET_CABAC(elem_offset[SIGNIFICANT_COEFF_FLAG] + inc);
+    int bin = GET_CABAC(elem_offset[SIGNIFICANT_COEFF_FLAG] + inc);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = (inc<27) ? &(cabac->ctx.cu_sig_model_luma[inc]) : &(cabac->ctx.cu_sig_model_chroma[inc-27]);
+    CABAC_BIN(cabac, bin, "sig_coeff_flag");
+#endif
+    return bin;
 }
 
 static av_always_inline int significant_coeff_flag_decode_0(HEVCContext *s, int c_idx, int offset)
 {
-    return GET_CABAC(elem_offset[SIGNIFICANT_COEFF_FLAG] + offset);
+    int bin = GET_CABAC(elem_offset[SIGNIFICANT_COEFF_FLAG] + offset);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = (offset < 27) ? &(cabac->ctx.cu_sig_model_luma[offset]) : &(cabac->ctx.cu_sig_model_chroma[offset - 27]);
+    CABAC_BIN(cabac, bin, "sig_coeff_flag");
+#endif
+    return bin;
 }
 
 static av_always_inline int coeff_abs_level_greater1_flag_decode(HEVCContext *s, int c_idx, int inc)
