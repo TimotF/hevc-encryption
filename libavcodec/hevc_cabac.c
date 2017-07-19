@@ -1128,7 +1128,14 @@ int ff_hevc_merge_idx_decode(HEVCContext *s)
 
 int ff_hevc_merge_flag_decode(HEVCContext *s)
 {
-    return GET_CABAC(elem_offset[MERGE_FLAG]);
+    int bin = GET_CABAC(elem_offset[MERGE_FLAG]);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.cu_merge_flag_ext_model);
+    CABAC_BIN(cabac, bin, "merge_flag");
+#endif
+    return bin;
 }
 
 int ff_hevc_inter_pred_idc_decode(HEVCContext *s, int nPbW, int nPbH)
