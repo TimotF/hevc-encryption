@@ -1510,10 +1510,19 @@ static av_always_inline int last_significant_coeff_suffix_decode(HEVCContext *s,
 static av_always_inline int significant_coeff_group_flag_decode(HEVCContext *s, int c_idx, int ctx_cg)
 {
     int inc;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
 
     inc = FFMIN(ctx_cg, 1) + (c_idx>0 ? 2 : 0);
 
-    return GET_CABAC(elem_offset[SIGNIFICANT_COEFF_GROUP_FLAG] + inc);
+    int bin = GET_CABAC(elem_offset[SIGNIFICANT_COEFF_GROUP_FLAG] + inc);
+#if HEVC_DECRYPT
+    cabac->cur_ctx = &(cabac->ctx.cu_sig_coeff_group_model[inc]);
+    CABAC_BIN(cabac, bin, "significant_coeff_group_flag");
+#endif
+    return bin;
 }
 static av_always_inline int significant_coeff_flag_decode(HEVCContext *s, int x_c, int y_c,
                                            int offset, const uint8_t *ctx_idx_map)
