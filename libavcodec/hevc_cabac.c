@@ -970,7 +970,14 @@ uint8_t ff_hevc_emt_tu_idx_decode(HEVCContext *s, int log2_cb_size)
 
 int ff_hevc_pred_mode_decode(HEVCContext *s)
 {
-    return GET_CABAC(elem_offset[PRED_MODE_FLAG]);
+    int bin = GET_CABAC(elem_offset[PRED_MODE_FLAG]);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.cu_pred_mode_model);
+    CABAC_BIN(cabac, bin, "PredMode");
+#endif
+    return bin;
 }
 
 int ff_hevc_split_coding_unit_flag_decode(HEVCContext *s, int ct_depth, int x0, int y0)
