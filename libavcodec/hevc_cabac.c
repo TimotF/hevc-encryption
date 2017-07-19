@@ -1201,10 +1201,15 @@ static av_always_inline int abs_mvd_greater1_flag_decode(HEVCContext *s)
 static av_always_inline int mvd_sign_flag_decode(HEVCContext *s)
 {
     CABACContext *c = &s->HEVClc->cc;
-    int ret = get_cabac_bypass_sign(c, -1);
-    // *(c->bytestream - 1) = 0x21;
-    // *(c->bytestream - 2) = 0x21;
-    return ret;
+    int bin = get_cabac_bypass_sign(c, -1);
+    
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    uint32_t mvd_sign_flag = (bin > 0) ? 0 : 1;
+    CABAC_BIN_EP(cabac, mvd_sign_flag, "mvd_sign_flag");
+#endif
+    return bin;
 }
 #if HEVC_ENCRYPTION
 static av_always_inline int mvd_decode_enc(HEVCContext *s)
