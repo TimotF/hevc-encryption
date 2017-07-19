@@ -844,7 +844,14 @@ int ff_hevc_skip_flag_decode(HEVCContext *s, int x0, int y0, int x_cb, int y_cb)
     if (s->HEVClc->ctb_up_flag || y0b)
         inc += !!SAMPLE_CTB(s->skip_flag, x_cb, y_cb - 1);
 
-    return GET_CABAC(elem_offset[SKIP_FLAG] + inc);
+    int bin = GET_CABAC(elem_offset[SKIP_FLAG] + inc);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.cu_skip_flag_model[inc]);
+    CABAC_BIN(cabac, bin, "SkipFlag");
+#endif
+    return bin;
 }
 
 int ff_hevc_cu_qp_delta_abs(HEVCContext *s)
