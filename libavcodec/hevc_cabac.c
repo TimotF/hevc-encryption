@@ -1241,12 +1241,31 @@ int ff_hevc_ref_idx_lx_decode(HEVCContext *s, int num_ref_idx_lx)
     int i = 0;
     int max = num_ref_idx_lx - 1;
     int max_ctx = FFMIN(max, 2);
+    int bin = 1;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
 
-    while (i < max_ctx && GET_CABAC(elem_offset[REF_IDX_L0] + i))
-        i++;
-    if (i == 2) {
-        while (i < max && get_cabac_bypass(&s->HEVClc->cc))
+    while (i < max_ctx && bin){
+        bin = GET_CABAC(elem_offset[REF_IDX_L0] + i);
+#if HEVC_DECRYPT
+        cabac->cur_ctx = &(cabac->ctx.cu_ref_pic_model[i]);
+        CABAC_BIN(cabac, bin, "ref_idx_lX");
+#endif
+        if(bin)
             i++;
+    }
+    bin = 1;
+    if (i == 2) {
+        while (i < max && bin){
+            bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+            CABAC_BIN_EP(cabac, bin, "ref_idx_lX");
+#endif
+            if(bin)
+                i++;
+        }
     }
 
     return i;
