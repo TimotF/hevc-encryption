@@ -1054,9 +1054,20 @@ int ff_hevc_prev_intra_luma_pred_flag_decode(HEVCContext *s)
 
 int ff_hevc_mpm_idx_decode(HEVCContext *s)
 {
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
     int i = 0;
-    while (i < 2 && get_cabac_bypass(&s->HEVClc->cc))
-        i++;
+    int bin = 1;
+    while (i < 2 && bin){
+        bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+        CABAC_BIN_EP(cabac, bin, "PredMode");
+#endif
+        if(bin)
+            i++;
+    }
     return i;
 }
 
