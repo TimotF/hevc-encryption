@@ -1063,7 +1063,7 @@ int ff_hevc_mpm_idx_decode(HEVCContext *s)
     while (i < 2 && bin){
         bin = get_cabac_bypass(&s->HEVClc->cc);
 #if HEVC_DECRYPT
-        CABAC_BIN_EP(cabac, bin, "PredMode");
+        CABAC_BIN_EP(cabac, bin, "mpm_idx");
 #endif
         if(bin)
             i++;
@@ -1073,11 +1073,21 @@ int ff_hevc_mpm_idx_decode(HEVCContext *s)
 
 int ff_hevc_rem_intra_luma_pred_mode_decode(HEVCContext *s)
 {
-    int i;
+    int i, bin;
     int value = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    CABAC_BIN_EP(cabac, value, "rem_intra_luma_pred_mode");
+#endif
 
-    for (i = 0; i < 4; i++)
-        value = (value << 1) | get_cabac_bypass(&s->HEVClc->cc);
+    for (i = 0; i < 4; i++){
+        bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+        CABAC_BIN_EP(cabac, bin, "rem_intra_luma_pred_mode");
+#endif
+        value = (value << 1) | bin;
+    }
     return value;
 }
 
