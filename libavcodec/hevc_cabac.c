@@ -1425,7 +1425,15 @@ int ff_hevc_cbf_luma_decode(HEVCContext *s, int trafo_depth)
 
 static int ff_hevc_transform_skip_flag_decode(HEVCContext *s, int c_idx)
 {
-    return GET_CABAC(elem_offset[TRANSFORM_SKIP_FLAG] + !!c_idx);
+    int type = !!c_idx;
+    int bin = GET_CABAC(elem_offset[TRANSFORM_SKIP_FLAG] + type);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = (type == 0) ? &(cabac->ctx.transform_skip_model_luma) : &(cabac->ctx.transform_skip_model_chroma);
+    CABAC_BIN(cabac, bin, "transform_skip_flag");
+#endif
+    return bin;
 }
 
 static int explicit_rdpcm_flag_decode(HEVCContext *s, int c_idx)
