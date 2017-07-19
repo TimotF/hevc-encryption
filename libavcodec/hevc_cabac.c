@@ -1101,11 +1101,25 @@ int ff_hevc_rem_intra_luma_pred_mode_decode(HEVCContext *s)
 int ff_hevc_intra_chroma_pred_mode_decode(HEVCContext *s)
 {
     int ret;
-    if (!GET_CABAC(elem_offset[INTRA_CHROMA_PRED_MODE]))
+    int bin = GET_CABAC(elem_offset[INTRA_CHROMA_PRED_MODE]);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.chroma_pred_model[0]);
+    CABAC_BIN(cabac, bin, "intra_chroma_pred_mode");
+#endif
+    if (!bin)
         return 4;
-
-    ret  = get_cabac_bypass(&s->HEVClc->cc) << 1;
-    ret |= get_cabac_bypass(&s->HEVClc->cc);
+    bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+    CABAC_BIN_EP(cabac, bin, "intra_chroma_pred_mode");
+#endif
+    ret  = bin << 1;
+    bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+    CABAC_BIN_EP(cabac, bin, "intra_chroma_pred_mode");
+#endif
+    ret |= bin;
     return ret;
 }
 
