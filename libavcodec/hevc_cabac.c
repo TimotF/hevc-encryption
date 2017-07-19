@@ -1038,7 +1038,13 @@ int ff_hevc_part_mode_decode(HEVCContext *s, int log2_cb_size)
 
 int ff_hevc_pcm_flag_decode(HEVCContext *s)
 {
-    return get_cabac_terminate(&s->HEVClc->cc);
+    int bin = get_cabac_terminate(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    kvz_cabac_encode_bin_trm(cabac, bin);
+#endif
+    return bin;
 }
 
 int ff_hevc_prev_intra_luma_pred_flag_decode(HEVCContext *s)
