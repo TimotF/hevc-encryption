@@ -1325,7 +1325,14 @@ static av_always_inline int mvd_decode(HEVCContext *s)
 
 int ff_hevc_split_transform_flag_decode(HEVCContext *s, int log2_trafo_size)
 {
-    return GET_CABAC(elem_offset[SPLIT_TRANSFORM_FLAG] + 5 - log2_trafo_size);
+    int bin = GET_CABAC(elem_offset[SPLIT_TRANSFORM_FLAG] + 5 - log2_trafo_size);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.trans_subdiv_model[5 - log2_trafo_size]);
+    CABAC_BIN(cabac, bin, "split_transform_flag");
+#endif
+    return bin;
 }
 
 int ff_hevc_cbf_cb_cr_decode(HEVCContext *s, int trafo_depth)
