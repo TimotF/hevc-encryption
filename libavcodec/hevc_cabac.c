@@ -1161,12 +1161,34 @@ int ff_hevc_merge_flag_decode(HEVCContext *s)
 
 int ff_hevc_inter_pred_idc_decode(HEVCContext *s, int nPbW, int nPbH)
 {
-    if (nPbW + nPbH == 12)
-        return GET_CABAC(elem_offset[INTER_PRED_IDC] + 4);
-    if (GET_CABAC(elem_offset[INTER_PRED_IDC] + s->HEVClc->ct_depth))
+    int bin;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
+    if (nPbW + nPbH == 12){
+        bin = GET_CABAC(elem_offset[INTER_PRED_IDC] + 4);
+#if HEVC_DECRYPT
+        cabac->cur_ctx = &(cabac->ctx.inter_dir[4]);
+        CABAC_BIN(cabac, bin, "inter_pred_idc");
+#endif
+        return bin;
+    }
+
+    bin = GET_CABAC(elem_offset[INTER_PRED_IDC] + s->HEVClc->ct_depth);
+#if HEVC_DECRYPT
+    cabac->cur_ctx = &(cabac->ctx.inter_dir[s->HEVClc->ct_depth]);
+    CABAC_BIN(cabac, bin, "inter_pred_idc");
+#endif
+    if (bin)
         return PRED_BI;
 
-    return GET_CABAC(elem_offset[INTER_PRED_IDC] + 4);
+    bin = GET_CABAC(elem_offset[INTER_PRED_IDC] + 4);
+#if HEVC_DECRYPT
+    cabac->cur_ctx = &(cabac->ctx.inter_dir[4]);
+    CABAC_BIN(cabac, bin, "inter_pred_idc");
+#endif
+    return bin;
 }
 
 int ff_hevc_ref_idx_lx_decode(HEVCContext *s, int num_ref_idx_lx)
