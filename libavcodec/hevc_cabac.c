@@ -1001,37 +1001,82 @@ int ff_hevc_split_coding_unit_flag_decode(HEVCContext *s, int ct_depth, int x0, 
 
 int ff_hevc_part_mode_decode(HEVCContext *s, int log2_cb_size)
 {
-    if (GET_CABAC(elem_offset[PART_MODE])) // 1
+    int bin = GET_CABAC(elem_offset[PART_MODE]);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.part_size_model[0]);
+    CABAC_BIN(cabac, bin, "part_mode");
+#endif
+    if (bin) // 1
         return PART_2Nx2N;
     if (log2_cb_size == s->ps.sps->log2_min_cb_size) {
         if (s->HEVClc->cu.pred_mode == MODE_INTRA) // 0
             return PART_NxN;
-        if (GET_CABAC(elem_offset[PART_MODE] + 1)) // 01
+        bin = GET_CABAC(elem_offset[PART_MODE] + 1);
+#if HEVC_DECRYPT
+        cabac->cur_ctx = &(cabac->ctx.part_size_model[1]);
+        CABAC_BIN(cabac, bin, "part_mode");
+#endif
+        if (bin) // 01
             return PART_2NxN;
         if (log2_cb_size == 3) // 00
             return PART_Nx2N;
-        if (GET_CABAC(elem_offset[PART_MODE] + 2)) // 001
+        bin = GET_CABAC(elem_offset[PART_MODE] + 2);
+#if HEVC_DECRYPT
+        cabac->cur_ctx = &(cabac->ctx.part_size_model[2]);
+        CABAC_BIN(cabac, bin, "part_mode");
+#endif
+        if (bin) // 001
             return PART_Nx2N;
         return PART_NxN; // 000
     }
 
     if (!s->ps.sps->amp_enabled_flag) {
-        if (GET_CABAC(elem_offset[PART_MODE] + 1)) // 01
+        bin = GET_CABAC(elem_offset[PART_MODE] + 1);
+#if HEVC_DECRYPT
+        cabac->cur_ctx = &(cabac->ctx.part_size_model[1]);
+        CABAC_BIN(cabac, bin, "part_mode");
+#endif
+        if (bin) // 01
             return PART_2NxN;
         return PART_Nx2N;
     }
 
-    if (GET_CABAC(elem_offset[PART_MODE] + 1)) { // 01X, 01XX
-        if (GET_CABAC(elem_offset[PART_MODE] + 3)) // 011
+    bin = GET_CABAC(elem_offset[PART_MODE] + 1);
+#if HEVC_DECRYPT
+    cabac->cur_ctx = &(cabac->ctx.part_size_model[1]);
+    CABAC_BIN(cabac, bin, "part_mode");
+#endif
+    if (bin) { // 01X, 01XX
+        bin = GET_CABAC(elem_offset[PART_MODE] + 3);
+#if HEVC_DECRYPT
+        cabac->cur_ctx = &(cabac->ctx.part_size_model[3]);
+        CABAC_BIN(cabac, bin, "part_mode");
+#endif
+        if (bin) // 011
             return PART_2NxN;
-        if (get_cabac_bypass(&s->HEVClc->cc)) // 0101
+        bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+        CABAC_BIN_EP(cabac, bin, "part_mode");
+#endif
+        if (bin) // 0101
             return PART_2NxnD;
         return PART_2NxnU; // 0100
     }
 
-    if (GET_CABAC(elem_offset[PART_MODE] + 3)) // 001
+    bin = GET_CABAC(elem_offset[PART_MODE] + 3);
+#if HEVC_DECRYPT
+    cabac->cur_ctx = &(cabac->ctx.part_size_model[3]);
+    CABAC_BIN(cabac, bin, "part_mode");
+#endif
+    if (bin) // 001
         return PART_Nx2N;
-    if (get_cabac_bypass(&s->HEVClc->cc)) // 0001
+    bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+    CABAC_BIN_EP(cabac, bin, "part_mode");
+#endif
+    if (bin) // 0001
         return PART_nRx2N;
     return PART_nLx2N;  // 0000
 }
