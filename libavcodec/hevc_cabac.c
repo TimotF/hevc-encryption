@@ -929,9 +929,20 @@ int ff_hevc_cu_chroma_qp_offset_idx(HEVCContext *s)
 {
     int c_max= FFMAX(5, s->ps.pps->chroma_qp_offset_list_len_minus1);
     int i = 0;
-
-    while (i < c_max && GET_CABAC(elem_offset[CU_CHROMA_QP_OFFSET_IDX]))
-        i++;
+    int bin = 1;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.cu_qp_delta_abs[0]);
+#endif
+    while (i < c_max && bin){
+        bin = GET_CABAC(elem_offset[CU_CHROMA_QP_OFFSET_IDX]);
+#if HEVC_DECRYPT
+        CABAC_BIN(cabac, bin, "cu_chroma_qp_offset_idx");
+#endif
+        if(bin)
+            i++;
+    }
 
     return i;
 }
