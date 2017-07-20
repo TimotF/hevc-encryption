@@ -1913,9 +1913,18 @@ static av_always_inline int coeff_sign_flag_decode(HEVCContext *s, uint8_t nb)
 {
     int i;
     int ret = 0;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
 
-    for (i = 0; i < nb; i++)
-        ret = (ret << 1) | get_cabac_bypass(&s->HEVClc->cc);
+    for (i = 0; i < nb; i++){
+        int bin = get_cabac_bypass(&s->HEVClc->cc);
+        ret = (ret << 1) | bin;
+#if HEVC_DECRYPT
+        CABAC_BIN_EP(cabac, bin, "coeff_sign_flag");
+#endif
+    }
 #if HEVC_ENCRYPTION
     if(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_TRANSF_COEFF_SIGNS))
       return ret^ff_get_key (&s->HEVClc->dbs_g, nb);
