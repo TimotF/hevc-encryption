@@ -1501,9 +1501,19 @@ static av_always_inline int last_significant_coeff_suffix_decode(HEVCContext *s,
     int i;
     int length = (last_significant_coeff_prefix >> 1) - 1;
     int value = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    CABAC_BIN_EP(cabac, value, "last_sig_coeff_suffix");
+#endif
 
-    for (i = 1; i < length; i++)
-        value = (value << 1) | get_cabac_bypass(&s->HEVClc->cc);
+    for (i = 1; i < length; i++){
+        int bin = get_cabac_bypass(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+        CABAC_BIN_EP(cabac, bin, "last_sig_coeff_suffix");
+#endif
+        value = (value << 1) | bin;
+    }
     return value;
 }
 
