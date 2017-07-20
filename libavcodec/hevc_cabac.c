@@ -1785,8 +1785,14 @@ static av_always_inline int coeff_abs_level_greater2_flag_decode(HEVCContext *s,
 {
     if (c_idx > 0)
         inc += 4;
-
-    return GET_CABAC(elem_offset[COEFF_ABS_LEVEL_GREATER2_FLAG] + inc);
+    int bin = GET_CABAC(elem_offset[COEFF_ABS_LEVEL_GREATER2_FLAG] + inc);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = (inc < 4) ? &(cabac->ctx.cu_abs_model_luma[inc]) : &(cabac->ctx.cu_abs_model_chroma[inc - 4]);
+    CABAC_BIN(cabac, bin, "coeff_abs_level_greater2_flag");
+#endif
+    return bin;
 }
 
 static av_always_inline int coeff_abs_level_remaining_decode(HEVCContext *s, int rc_rice_param)
