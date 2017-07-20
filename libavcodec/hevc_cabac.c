@@ -1283,7 +1283,14 @@ int ff_hevc_ref_idx_lx_decode(HEVCContext *s, int num_ref_idx_lx)
 
 int ff_hevc_mvp_lx_flag_decode(HEVCContext *s)
 {
-    return GET_CABAC(elem_offset[MVP_LX_FLAG]);
+    int bin = GET_CABAC(elem_offset[MVP_LX_FLAG]);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.mvp_idx_model[0]);
+    CABAC_BIN(cabac, bin, "mvp_lx_flag");
+#endif
+    return bin;
 }
 
 int ff_hevc_no_residual_syntax_flag_decode(HEVCContext *s)
