@@ -677,7 +677,14 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
             if (s->HEVClc->ctb_tile_rs % s->ps.pps->tile_width[ctb_addr_ts] == 0) {
                 if (!s->ps.pps->tiles_enabled_flag ||
                     (s->ps.pps->tile_id[ctb_addr_ts] == s->ps.pps->tile_id[ctb_addr_ts - 1])) {
-                    get_cabac_terminate(&s->HEVClc->cc);
+                    int bin = get_cabac_terminate(&s->HEVClc->cc);
+#if HEVC_DECRYPT
+                    HEVCLocalContext *lc = s->HEVClc;
+                    cabac_data_t *const cabac = &lc->ccc;
+                    kvz_cabac_encode_bin_trm(cabac, (bin)?1:0);
+                    kvz_cabac_finish(cabac);
+                    kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
+#endif
 
                     if (s->threads_number == 1)
                         cabac_reinit(s->HEVClc);
@@ -815,7 +822,9 @@ int ff_hevc_end_of_slice_flag_decode(HEVCContext *s)
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
-    kvz_cabac_encode_bin_trm(cabac,bin);
+    kvz_cabac_encode_bin_trm(cabac, (bin) ? 1 : 0);
+    kvz_cabac_finish(cabac);
+    kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
 #endif
     return bin;
 }
@@ -1115,7 +1124,9 @@ int ff_hevc_pcm_flag_decode(HEVCContext *s)
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
-    kvz_cabac_encode_bin_trm(cabac, bin);
+    kvz_cabac_encode_bin_trm(cabac, (bin) ? 1 : 0);
+    kvz_cabac_finish(cabac);
+    kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
 #endif
     return bin;
 }
