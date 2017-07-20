@@ -1484,7 +1484,7 @@ static int explicit_rdpcm_flag_decode(HEVCContext *s, int c_idx)
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
-    cabac->cur_ctx = (!!c_idx == 0) ? &(cabac->ctx.transform_skip_model_luma) : &(cabac->ctx.transform_skip_model_chroma);
+    cabac->cur_ctx = ((!!c_idx) == 0) ? &(cabac->ctx.transform_skip_model_luma) : &(cabac->ctx.transform_skip_model_chroma);
     CABAC_BIN(cabac, bin, "explicit_rdpcm_flag");
 #endif
     return bin;
@@ -1492,7 +1492,14 @@ static int explicit_rdpcm_flag_decode(HEVCContext *s, int c_idx)
 
 static int explicit_rdpcm_dir_flag_decode(HEVCContext *s, int c_idx)
 {
-    return GET_CABAC(elem_offset[EXPLICIT_RDPCM_DIR_FLAG] + !!c_idx);
+    int bin = GET_CABAC(elem_offset[EXPLICIT_RDPCM_DIR_FLAG] + !!c_idx);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = ((!!c_idx) == 0) ? &(cabac->ctx.transform_skip_model_luma) : &(cabac->ctx.transform_skip_model_chroma);
+    CABAC_BIN(cabac, bin, "explicit_rdpcm_dir_flag");
+#endif
+    return bin;
 }
 
 int ff_hevc_log2_res_scale_abs(HEVCContext *s, int idx) {
