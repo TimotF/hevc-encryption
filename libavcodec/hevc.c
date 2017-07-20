@@ -4747,12 +4747,12 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
     #if VERBOSE
         printf("saving start_nal_code in buffer\n");
         if(size_start_code){
-            printf("------------start_code-----------\n");
+            /*printf("------------start_code-----------\n");
             int indx;
             for (indx = 0; indx < size_start_code[i];indx++){
                 printf("%02x ", nal_start_code[i][indx]);
             }
-            printf("\n----------------------------------\n");
+            printf("\n----------------------------------\n");*/
     #endif
             memcpy(packet_buffer + packet_length, nal_start_code[i], size_start_code[i]);
             packet_length += size_start_code[i];
@@ -4773,12 +4773,12 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
             memcpy(packet_buffer + packet_length, data_out->data, len_chuck);
             packet_length += len_chuck;
     #if VERBOSE
-            int m;
+            /*int m;
             for (m = 0; m < len_chuck; m++)
             {
                 printf("%02x ", data_out->data[m]);
             }
-            printf("\n");
+            printf("\n");*/
     #endif
             written += len_chuck;
             data_out = data_out->next;

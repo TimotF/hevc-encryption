@@ -1475,6 +1475,11 @@ static av_always_inline void last_significant_coeff_xy_prefix_decode(HEVCContext
     int i = 0;
     int max = (log2_size << 1) - 1;
     int ctx_offset, ctx_shift;
+    int bin = 1;
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+#endif
 
     if (!c_idx) {
         ctx_offset = 3 * (log2_size - 2)  + ((log2_size - 1) >> 2);
@@ -1483,15 +1488,30 @@ static av_always_inline void last_significant_coeff_xy_prefix_decode(HEVCContext
         ctx_offset = 15;
         ctx_shift = log2_size - 2;
     }
-    while (i < max &&
-           GET_CABAC(elem_offset[LAST_SIGNIFICANT_COEFF_X_PREFIX] + (i >> ctx_shift) + ctx_offset))
-        i++;
+    while (i < max && bin){
+        bin = GET_CABAC(elem_offset[LAST_SIGNIFICANT_COEFF_X_PREFIX] + (i >> ctx_shift) + ctx_offset);
+#if HEVC_DECRYPT
+        int offset = (i >> ctx_shift) + ctx_offset;
+        cabac->cur_ctx = (offset < 15) ? &(cabac->ctx.cu_ctx_last_x_luma[offset]) : &(cabac->ctx.cu_ctx_last_x_chroma[offset - 15]);
+        CABAC_BIN(cabac, bin, "last_sig_coeff_x_prefix");
+#endif
+        if(bin)
+            i++;
+    }
     *last_scx_prefix = i;
 
     i = 0;
-    while (i < max &&
-           GET_CABAC(elem_offset[LAST_SIGNIFICANT_COEFF_Y_PREFIX] + (i >> ctx_shift) + ctx_offset))
-        i++;
+    bin = 1;
+    while (i < max && bin){
+        bin = GET_CABAC(elem_offset[LAST_SIGNIFICANT_COEFF_Y_PREFIX] + (i >> ctx_shift) + ctx_offset);
+#if HEVC_DECRYPT
+        int offset = (i >> ctx_shift) + ctx_offset;
+        cabac->cur_ctx = (offset < 15) ? &(cabac->ctx.cu_ctx_last_y_luma[offset]) : &(cabac->ctx.cu_ctx_last_y_chroma[offset - 15]);
+        CABAC_BIN(cabac, bin, "last_sig_coeff_x_prefix");
+#endif
+        if(bin)
+            i++;
+    }
     *last_scy_prefix = i;
 }
 
