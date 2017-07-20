@@ -915,7 +915,14 @@ int ff_hevc_cu_qp_delta_sign_flag(HEVCContext *s)
 
 int ff_hevc_cu_chroma_qp_offset_flag(HEVCContext *s)
 {
-    return GET_CABAC(elem_offset[CU_CHROMA_QP_OFFSET_FLAG]);
+    int bin = GET_CABAC(elem_offset[CU_CHROMA_QP_OFFSET_FLAG]);
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.cu_qp_delta_abs[0]);
+    CABAC_BIN(cabac, bin, "cu_chroma_qp_offset_flag");
+#endif
+    return bin;
 }
 
 int ff_hevc_cu_chroma_qp_offset_idx(HEVCContext *s)
