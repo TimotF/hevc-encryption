@@ -247,15 +247,21 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size,
         openHevcContext->c->quality_id = openHevcContexts->active_layer;
 
         if (i <= openHevcContexts->active_layer) {
-            openHevcContext->avpkt.size = au_len;
-            openHevcContext->avpkt.data = *buff;
+            // note : cannot set avpkt.data to another address manualy
+            if(openHevcContext->avpkt.size<au_len){
+                av_grow_packet(&openHevcContext->avpkt, au_len - openHevcContext->avpkt.size);
+            }
+            memcpy(openHevcContext->avpkt.data, *buff, au_len);
+            av_shrink_packet(&openHevcContext->avpkt, au_len);
+            //     openHevcContext->avpkt.size = au_len;
+            // openHevcContext->avpkt.data = *buff;
         } else {
             openHevcContext->avpkt.size = 0;
             openHevcContext->avpkt.data = NULL;
         }
         openHevcContext->avpkt.pts  = pts;
-        decoded_length                         += avcodec_decode_video2( openHevcContext->c, openHevcContext->picture,
-                                                             &got_picture, &openHevcContext->avpkt);
+        decoded_length += avcodec_decode_video2( openHevcContext->c, openHevcContext->picture,
+                                                 &got_picture, &openHevcContext->avpkt);
         ret |= (got_picture << i);
         
 
@@ -288,7 +294,7 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size,
     openHevcContexts->got_picture_mask = ret;
 
     if (decoded_length < 0) {
-        fprintf(stderr, "Error while decoding frame \n");
+        fprintf(stderr, "libOpenHevcDecode : Error while decoding frame \n");
         return decoded_length;
     }
 
