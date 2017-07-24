@@ -35,7 +35,9 @@ flac_header (AVFormatContext * s, int idx)
     AVStream *st = s->streams[idx];
     GetBitContext gb;
     int mdt;
+#if VERBOSE
     printf("!!! no encrypt in flac_header\n");
+#endif
     if (os->buf[os->pstart] == 0xff)
         return 0;
 

@@ -357,7 +357,9 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                         //int format = openHevcFrameCpy.frameInfo.chromat_format == YUV420 ? 1 : 0;
                         //libOpenHevcGetOutputCpy(openHevcHandle, 1, &openHevcFrameCpy);
                         fwrite(packet[0].data, packet[0].size, 1, fout);
+#if VERBOSE
                         printf("writing %d bytes in fout\n",packet[0].size);
+#endif
                     }
                     nbFrame++;
 
@@ -385,18 +387,24 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                     fprintf(stderr, "Error when reading first frame\n");
                     exit(1);
                 }
+#if VERBOSE
                 printf("packet done\n");
+#endif
             } // End of got_packet
     } //End of main loop
 
+#if VERBOSE
     printf("file done\n");
+#endif
     time = oh_timer_getTimeMs()/1000.0;
     oh_display_close();
 
     if (fout) {
         fclose(fout);
     }
+#if VERBOSE
     printf("closing file\n");
+#endif
     if(!split_layers)
         avformat_close_input(&pFormatCtx[0]);
     if(split_layers){

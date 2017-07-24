@@ -615,7 +615,9 @@ static void cabac_init_state(HEVCContext *s)
 
 void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
 {
+#if VERBOSE
     printf("ff_hevc_cabac_init\n");
+#endif
     HEVCLocalContext *lc = s->HEVClc;
     if (ctb_addr_ts == s->ps.pps->ctb_addr_rs_to_ts[s->sh.slice_ctb_addr_rs]) {
         cabac_init_decoder(s);
@@ -820,17 +822,18 @@ uint8_t ff_hevc_sao_eo_class_decode(HEVCContext *s)
 
 int ff_hevc_end_of_slice_flag_decode(HEVCContext *s)
 {
+#if VERBOSE
     printf("ff_hevc_end_of_slice_flag_decode\n");
+#endif
     int bin = get_cabac_terminate(&s->HEVClc->cc);
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
-    printf("bin : %d\n",bin);
     kvz_cabac_encode_bin_trm(cabac, (bin) ? 1 : 0);
-    //kvz_cabac_finish(cabac);
-    //kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
 #endif
+#if VERBOSE
     printf("end of ff_hevc_end_of_slice_flag_decode\n");
+#endif
     return bin;
 }
 
@@ -967,7 +970,9 @@ int ff_hevc_cu_chroma_qp_offset_idx(HEVCContext *s)
 #if COM16_C806_EMT
 uint8_t ff_hevc_emt_cu_flag_decode(HEVCContext *s, int log2_cb_size, int cbfLuma)
 {
+#if VERBOSE
     printf("!!! no encrypt in ff_hevc_emt_cu_flag_decode\n");
+#endif
     //uint8_t inc = ;
 	uint8_t flag_value = 0;
     if ( (s->HEVClc->cu.pred_mode == MODE_INTRA ) && s->ps.sps->use_intra_emt && ( 1 << log2_cb_size <= EMT_INTRA_MAX_CU ) && cbfLuma)
@@ -988,7 +993,9 @@ uint8_t ff_hevc_emt_cu_flag_decode(HEVCContext *s, int log2_cb_size, int cbfLuma
 uint8_t ff_hevc_emt_tu_idx_decode(HEVCContext *s, int log2_cb_size)
 {
     uint8_t trIdx = 0;
+#if VERBOSE
     printf("!!! no encrypt in ff_hevc_emt_tu_idx_decode\n");
+#endif
     if ( (s->HEVClc->cu.pred_mode == MODE_INTER) && ((1 << log2_cb_size) <= EMT_INTER_MAX_CU )){
         uint8_t uiSymbol1 = GET_CABAC(elem_offset[EMT_TU_IDX]+2);
         uint8_t uiSymbol2 = GET_CABAC(elem_offset[EMT_TU_IDX]+3);
@@ -1387,7 +1394,9 @@ static av_always_inline int mvd_decode_enc(HEVCContext *s)
     int ret = 2, ret0 = 0, sign;
     int k = 1, k0;
     unsigned int key;
+#if VERBOSE
     printf("!!! no encrypt in mvd_decode_enc\n");
+#endif
     while (k < CABAC_MAX_BIN && get_cabac_bypass(&s->HEVClc->cc)) {
         ret += 1 << k;
         k++;
@@ -1528,7 +1537,9 @@ static int explicit_rdpcm_dir_flag_decode(HEVCContext *s, int c_idx)
 
 int ff_hevc_log2_res_scale_abs(HEVCContext *s, int idx) {
     int i =0;
-printf("!!! no encrypt in ff_hevc_log2_res_scale_abs\n");
+#if VERBOSE
+    printf("!!! no encrypt in ff_hevc_log2_res_scale_abs\n");
+#endif
     while (i < 4 && GET_CABAC(elem_offset[LOG2_RES_SCALE_ABS] + 4 * idx + i))
         i++;
 
@@ -1536,7 +1547,9 @@ printf("!!! no encrypt in ff_hevc_log2_res_scale_abs\n");
 }
 
 int ff_hevc_res_scale_sign_flag(HEVCContext *s, int idx) {
+#if VERBOSE
     printf("!!! no encrypt in ff_hevc_log2_res_scale_abs\n");
+#endif
     return GET_CABAC(elem_offset[RES_SCALE_SIGN_FLAG] + idx);
 }
 

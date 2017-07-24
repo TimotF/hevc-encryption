@@ -1567,7 +1567,9 @@ do {                                                    \
 
 static void hls_sao_param(HEVCContext *s, int rx, int ry)
 {
+#if VERBOSE
     printf("hls_sao_param\n");
+#endif
     HEVCLocalContext *lc    = s->HEVClc;
 #if HEVC_DECRYPT
     cabac_data_t *const cabac = &lc->ccc;
@@ -3122,7 +3124,9 @@ static int hls_coding_quadtree(HEVCContext *s, int x0, int y0,
 static void hls_decode_neighbour(HEVCContext *s, int x_ctb, int y_ctb,
                                  int ctb_addr_ts)
 {
+#if VERBOSE
     printf("hls_decode_neighbour\n");
+#endif
     HEVCLocalContext *lc  = s->HEVClc;
     int ctb_size          = 1 << s->ps.sps->log2_ctb_size;
     int ctb_addr_rs       = s->ps.pps->ctb_addr_ts_to_rs[ctb_addr_ts];
@@ -3193,7 +3197,9 @@ static int hls_decode_entry(AVCodecContext *avctxt, void *isFilterThread)
     }
 
     while (more_data && ctb_addr_ts < s->ps.sps->ctb_size) {
+#if CABAC_VERBOSE
         printf("loop %d\n",i++);
+#endif
         int ctb_addr_rs = s->ps.pps->ctb_addr_ts_to_rs[ctb_addr_ts];
         s->HEVClc->tile_id = s->ps.pps->tile_id[ctb_addr_ts];
 
@@ -3215,12 +3221,21 @@ static int hls_decode_entry(AVCodecContext *avctxt, void *isFilterThread)
             return more_data;
         }
 
-
         ctb_addr_ts++;
         s->HEVClc->ctb_tile_rs++;
         ff_hevc_save_states(s, ctb_addr_ts);
         ff_hevc_hls_filters(s, x_ctb, y_ctb, ctb_size);
     }
+
+#if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    kvz_cabac_finish(cabac);
+#if VERBOSE
+    printf("end of bitstream, saving trailing bits\n");
+#endif
+    kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
+#endif
 
     if (x_ctb + ctb_size >= s->ps.sps->width &&
         y_ctb + ctb_size >= s->ps.sps->height)
@@ -4462,6 +4477,8 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
     int packet_length = 0;  // the length of the new buffer
 
 #if HEVC_DECRYPT
+    cabac_data_t *const cabac = &lc->ccc;
+
     uint8_t **nal_start_code = NULL;
     uint8_t *size_start_code = NULL;
     #if VERBOSE
@@ -4719,6 +4736,7 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
             s->skipped_bytes_pos = s->skipped_bytes_pos_nal[i];
 
             ret = decode_nal_unit(s, s->nals[i].data, s->nals[i].size);
+
             if (ret < 0) {
                 av_log(s->avctx, AV_LOG_WARNING,
                        "Error parsing NAL unit #%d.\n", i);
@@ -4745,9 +4763,9 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
             goto fail;
         }
 #if HEVC_DECRYPT
+        if(size_start_code){
     #if VERBOSE
         printf("saving start_nal_code in buffer\n");
-        if(size_start_code){
             /*printf("------------start_code-----------\n");
             int indx;
             for (indx = 0; indx < size_start_code[i];indx++){
@@ -4808,12 +4826,6 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
     *data_length = packet_length;
     *data = packet_buffer;
 #if HEVC_DECRYPT
-    // Get stream length before taking chunks since that clears the stream.
-    // if (len_out)
-    //     *len_out = kvz_bitstream_tell(&stream) / 8;
-    // if (data_out)
-    //     *data_out = kvz_bitstream_take_chunks(&stream);
-    // free stream
     kvz_bitstream_finalize(lc->ccc.stream);
 #endif
 
