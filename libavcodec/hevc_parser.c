@@ -52,7 +52,9 @@ static int hevc_parse_slice_header(AVCodecParserContext *s, H2645NAL *nal,
 {
     HEVCParserContext *ctx = s->priv_data;
     GetBitContext *gb = &nal->gb;
-
+#if VERBOSE
+    printf("!!! no encrypt in hevc_parse_slice_header\n");
+#endif
     HEVCPPS *pps;
     HEVCSPS *sps;
     unsigned int pps_id;
@@ -239,10 +241,9 @@ static inline int parse_nal_units(AVCodecParserContext *s, const uint8_t *buf,
     H2645NAL *nal;
     int is_global = buf == avctx->extradata;
 
-
-    printf("buffer avant consumed :\n");
-    for(i=0;i<buf_size;i++) printf("%02x ",buf[i]);
-    printf("\n");
+#if VERBOSE
+    printf("!!! no encrypt in parse_nal_units\n");
+#endif
 
     if (!h->HEVClc)
         h->HEVClc = av_mallocz(sizeof(HEVCLocalContext));
@@ -297,9 +298,9 @@ static inline int parse_nal_units(AVCodecParserContext *s, const uint8_t *buf,
             return consumed;
         
         ret = init_get_bits8(gb, nal->data + 2, nal->size);
-        printf("buffer apres init :\n");
-        for(i=0;i<nal->size;i++) printf("%02x ",*(nal->data + 2+i));
-        printf("\n");
+        // printf("buffer apres init :\n");
+        // for(i=0;i<nal->size;i++) printf("%02x ",*(nal->data + 2+i));
+        // printf("\n");
 
         if (ret < 0)
             return ret;

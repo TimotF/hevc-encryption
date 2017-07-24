@@ -57,7 +57,7 @@ static inline void init_put_bits(PutBitContext *s, uint8_t *buffer,
     s->buf          = buffer;
     s->buf_end      = s->buf + buffer_size;
     s->buf_ptr      = s->buf;
-    s->bit_left     = 32;
+    s->bit_left     = 23;
     s->bit_buf      = 0;
 }
 

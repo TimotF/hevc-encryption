@@ -70,12 +70,12 @@ static const AVRational vui_sar[] = {
     {  2,   1 },
 };
 
-static void printBitContext(GetBitContext *gb){
-    int index;
-    for(index = 0; index<(gb->buffer_end-gb->buffer); index++){
-        printf("%02x ",gb->buffer[index]);
-    }
-}
+// static void printBitContext(GetBitContext *gb){
+//     int index;
+//     for(index = 0; index<(gb->buffer_end-gb->buffer); index++){
+//         printf("%02x ",gb->buffer[index]);
+//     }
+// }
 
 static void remove_pps(HEVCParamSets *s, int id)
 {
@@ -124,7 +124,9 @@ int ff_hevc_decode_short_term_rps(GetBitContext *gb, AVCodecContext *avctx,
     int k1 = 0;
     int k  = 0;
     int i;
-
+#if VERBOSE
+    printf("!!! no encrypt in ff_hevc_decode_short_term_rps\n");
+#endif
     if (rps != sps->st_rps && sps->num_short_term_rps)
         rps_predict = get_bits1(gb);
 
@@ -243,11 +245,180 @@ int ff_hevc_decode_short_term_rps(GetBitContext *gb, AVCodecContext *avctx,
 }
 
 
+#if HEVC_DECRYPT
+int ff_hevc_decode_short_term_rps_decrypt(bitstream_t *stream, GetBitContext *gb, AVCodecContext *avctx,
+                                          ShortTermRPS *rps, const HEVCSPS *sps, int is_slice_header)
+{
+    uint8_t rps_predict = 0;
+    int delta_poc;
+    int k0 = 0;
+    int k1 = 0;
+    int k = 0;
+    int i;
+    uint32_t buf;
+    
+    if (rps != sps->st_rps && sps->num_short_term_rps){
+        rps_predict = get_bits1(gb);
+        kvz_bitstream_put(stream, rps_predict,1);
+    }
+
+    if (rps_predict)
+    {
+        const ShortTermRPS *rps_ridx;
+        int delta_rps;
+        unsigned abs_delta_rps;
+        uint8_t use_delta_flag = 0;
+        uint8_t delta_rps_sign;
+
+        if (is_slice_header)
+        {
+            buf = get_ue_golomb_long(gb);
+            kvz_bitstream_put_ue(stream,buf);
+            unsigned int delta_idx = buf + 1;
+            if (delta_idx > sps->num_short_term_rps)
+            {
+                av_log(avctx, AV_LOG_ERROR,
+                       "Invalid value of delta_idx in slice header RPS: %d > %d.\n",
+                       delta_idx, sps->num_short_term_rps);
+                return AVERROR_INVALIDDATA;
+            }
+            rps_ridx = &sps->st_rps[sps->num_short_term_rps - delta_idx];
+            rps->rps_idx_num_delta_pocs = rps_ridx->num_delta_pocs;
+        }
+        else
+            rps_ridx = &sps->st_rps[rps - sps->st_rps - 1];
+
+        delta_rps_sign = get_bits1(gb);
+        kvz_bitstream_put(stream, delta_rps_sign, 1);
+        buf = get_ue_golomb_long(gb);
+        kvz_bitstream_put_ue(stream, buf);
+        abs_delta_rps = buf + 1;
+        if (abs_delta_rps < 1 || abs_delta_rps > 32768)
+        {
+            av_log(avctx, AV_LOG_ERROR,
+                   "Invalid value of abs_delta_rps: %d\n",
+                   abs_delta_rps);
+            return AVERROR_INVALIDDATA;
+        }
+        delta_rps = (1 - (delta_rps_sign << 1)) * abs_delta_rps;
+        for (i = 0; i <= rps_ridx->num_delta_pocs; i++)
+        {
+            int used = rps->used[k] = get_bits1(gb);
+            kvz_bitstream_put(stream, used, 1);
+
+            if (!used){
+                use_delta_flag = get_bits1(gb);
+                kvz_bitstream_put(stream, use_delta_flag, 1);
+            }
+
+            if (used || use_delta_flag)
+            {
+                if (i < rps_ridx->num_delta_pocs)
+                    delta_poc = delta_rps + rps_ridx->delta_poc[i];
+                else
+                    delta_poc = delta_rps;
+                rps->delta_poc[k] = delta_poc;
+                if (delta_poc < 0)
+                    k0++;
+                else
+                    k1++;
+                k++;
+            }
+        }
+
+        rps->num_delta_pocs = k;
+        rps->num_negative_pics = k0;
+        // sort in increasing order (smallest first)
+        if (rps->num_delta_pocs != 0)
+        {
+            int used, tmp;
+            for (i = 1; i < rps->num_delta_pocs; i++)
+            {
+                delta_poc = rps->delta_poc[i];
+                used = rps->used[i];
+                for (k = i - 1; k >= 0; k--)
+                {
+                    tmp = rps->delta_poc[k];
+                    if (delta_poc < tmp)
+                    {
+                        rps->delta_poc[k + 1] = tmp;
+                        rps->used[k + 1] = rps->used[k];
+                        rps->delta_poc[k] = delta_poc;
+                        rps->used[k] = used;
+                    }
+                }
+            }
+        }
+        if ((rps->num_negative_pics >> 1) != 0)
+        {
+            int used;
+            k = rps->num_negative_pics - 1;
+            // flip the negative values to largest first
+            for (i = 0; i<rps->num_negative_pics>> 1; i++)
+            {
+                delta_poc = rps->delta_poc[i];
+                used = rps->used[i];
+                rps->delta_poc[i] = rps->delta_poc[k];
+                rps->used[i] = rps->used[k];
+                rps->delta_poc[k] = delta_poc;
+                rps->used[k] = used;
+                k--;
+            }
+        }
+    }
+    else
+    {
+        unsigned int prev, nb_positive_pics;
+        rps->num_negative_pics = get_ue_golomb_long(gb);
+        nb_positive_pics = get_ue_golomb_long(gb);
+        kvz_bitstream_put_ue(stream, rps->num_negative_pics);
+        kvz_bitstream_put_ue(stream, nb_positive_pics);
+
+        if (rps->num_negative_pics >= MAX_REFS ||
+            nb_positive_pics >= MAX_REFS)
+        {
+            av_log(avctx, AV_LOG_ERROR, "Too many refs in a short term RPS.\n");
+            return AVERROR_INVALIDDATA;
+        }
+
+        rps->num_delta_pocs = rps->num_negative_pics + nb_positive_pics;
+        if (rps->num_delta_pocs)
+        {
+            prev = 0;
+            for (i = 0; i < rps->num_negative_pics; i++)
+            {
+                buf = get_ue_golomb_long(gb);
+                kvz_bitstream_put_ue(stream, buf);
+                delta_poc = buf + 1;
+                prev -= delta_poc;
+                rps->delta_poc[i] = prev;
+                rps->used[i] = get_bits1(gb);
+                kvz_bitstream_put(stream, rps->used[i], 1);
+            }
+            prev = 0;
+            for (i = 0; i < nb_positive_pics; i++)
+            {
+                buf = get_ue_golomb_long(gb);
+                kvz_bitstream_put_ue(stream, buf);
+                delta_poc = buf + 1;
+                prev += delta_poc;
+                rps->delta_poc[rps->num_negative_pics + i] = prev;
+                rps->used[rps->num_negative_pics + i] = get_bits1(gb);
+                kvz_bitstream_put(stream, rps->used[rps->num_negative_pics + i], 1);
+            }
+        }
+    }
+    return 0;
+}
+#endif
+
 static int decode_profile_tier_level(GetBitContext *gb, AVCodecContext *avctx,
                                       PTLCommon *ptl)
 {
     int i;
-
+#if VERBOSE
+    printf("!!! no encrypt in decode_profile_tier_level\n");
+#endif
     if (get_bits_left(gb) < 2+1+5 + 32 + 4 + 16 + 16 + 12)
         return -1;
 
@@ -329,6 +500,9 @@ static int parse_ptl(GetBitContext *gb, AVCodecContext *avctx,
                       PTL *ptl, int max_num_sub_layers, int profile_present_flag)
 {
     int i;
+#if VERBOSE
+    printf("!!! no encrypt in parse_ptl\n");
+#endif
     if (profile_present_flag){
         if (decode_profile_tier_level(gb, avctx, &ptl->general_ptl) < 0 ||
             get_bits_left(gb) < 8 + (8*2 * (max_num_sub_layers - 1 > 0))) {
@@ -369,7 +543,10 @@ static int parse_ptl(GetBitContext *gb, AVCodecContext *avctx,
 
 static void sub_layer_hrd_parameters(GetBitContext *gb, SubLayerHRDParameter *Sublayer_HRDPar, int CpbCnt, int sub_pic_hrd_params_present_flag ) {
     int i;
-	for( i = 0; i  <=  CpbCnt; i++ ) {
+#if VERBOSE
+    printf("!!! no encrypt in sub_layer_hrd_parameters\n");
+#endif
+    for( i = 0; i  <=  CpbCnt; i++ ) {
 		Sublayer_HRDPar->bit_rate_value_minus1[i] = get_ue_golomb_long(gb);
         print_cabac("bit_rate_value_minus1", Sublayer_HRDPar->bit_rate_value_minus1[i]);
 		Sublayer_HRDPar->cpb_size_value_minus1[i] = get_ue_golomb_long(gb);
@@ -388,6 +565,9 @@ static int decode_hrd(GetBitContext *gb, AVCodecContext *avctx, HRDParameter *Hr
                        int max_sublayers)
 {
     int i;
+#if VERBOSE
+    printf("!!! no encrypt in decode_hrd\n");
+#endif
     //GetBitContext   *gb   = &s->HEVClc->gb;  
     if (common_inf_present) {
         HrdParam->nal_hrd_parameters_present_flag = get_bits1(gb);
@@ -464,6 +644,9 @@ static int decode_hrd(GetBitContext *gb, AVCodecContext *avctx, HRDParameter *Hr
 
 static void vps_vui_bsp_hrd_params(GetBitContext *gb, AVCodecContext *avctx, HEVCVPS *vps, BspHrdParams *Bsp_Hrd_Params) {
     int i, k, h, j, r, t;
+#if VERBOSE
+    printf("!!! no encrypt in vps_vui_bsp_hrd_params\n");
+#endif
     HEVCVPSExt  *Hevc_VPS_Ext = &vps->vps_ext;
     //GetBitContext   *gb             = &s->HEVClc->gb;  
 	Bsp_Hrd_Params->vps_num_add_hrd_params  = get_ue_golomb_long(gb);
@@ -536,6 +719,9 @@ static int get_num_views(HEVCVPS *vps) {
 
 static void parse_rep_format(RepFormat *rep_format, GetBitContext *gb) {
 
+#if VERBOSE
+    printf("!!! no encrypt in parse_rep_format\n");
+#endif
     rep_format->pic_width_vps_in_luma_samples = get_bits(gb, 16);
     rep_format->pic_height_vps_in_luma_samples = get_bits(gb, 16);
     rep_format->chroma_and_bit_depth_vps_present_flag = get_bits1(gb);
@@ -577,7 +763,10 @@ static void parse_rep_format(RepFormat *rep_format, GetBitContext *gb) {
 }
 
 static void Video_Signal_Info (GetBitContext *gb, VideoSignalInfo *video_signal_info ) {
-	video_signal_info->video_vps_format                = get_bits(gb, 3);
+#if VERBOSE
+    printf("!!! no encrypt in Video_Signal_Info\n");
+#endif
+    video_signal_info->video_vps_format                = get_bits(gb, 3);
 	video_signal_info->video_full_range_vps_flag       = get_bits1(gb);
     video_signal_info->color_primaries_vps             = get_bits(gb, 8);
 	video_signal_info->transfer_characteristics_vps    = get_bits(gb, 8);
@@ -593,7 +782,9 @@ static void Video_Signal_Info (GetBitContext *gb, VideoSignalInfo *video_signal_
 static void parse_vps_vui(GetBitContext *gb, AVCodecContext *avctx, HEVCVPS *vps) {
     int i,j;
     VPSVUI *vps_vui     = &vps->vps_ext.VpsVui;
-
+#if VERBOSE
+    printf("!!! no encrypt in parse_vps_vui\n");
+#endif
     print_cabac(" \n --- parse vps vui --- \n", 0);
     vps_vui->cross_layer_pic_type_aligned_flag  = get_bits1(gb);
     print_cabac("cross_layer_pic_type_aligned_flag", vps_vui->cross_layer_pic_type_aligned_flag); 
@@ -721,6 +912,9 @@ static void calculateMaxSLInLayerSets(HEVCVPS *vps) {
 }
 static void dpb_size(GetBitContext *gb, HEVCVPS *vps ) {
     int i, j, k;
+#if VERBOSE
+    printf("!!! no encrypt in dpb_size\n");
+#endif
     DPBSize *DPB_Size = &vps->vps_ext.DPB_Size;
     HEVCVPSExt  *Hevc_VPS_Ext = &vps->vps_ext;
     calculateMaxSLInLayerSets(vps);
@@ -887,7 +1081,9 @@ static void parse_vps_extension (GetBitContext *gb, AVCodecContext *avctx, HEVCV
     int NumOutputLayersInOutputLayerSet[16],  layerSetIdxForOutputLayerSet;
     int vps_non_vui_extension_length, vps_vui_present_flag;
     //print_cabac(" \n --- parse vps extention  --- \n ", s->nuh_layer_id);
-
+#if VERBOSE
+    printf("!!! no encrypt in parse_vps_extension\n");
+#endif
     if( vps->vps_max_layers > 1  &&  vps->vps_base_layer_internal_flag )
         //profile_tier_level(gb, avctx, 0, &Hevc_VPS_Ext->ptl[0], vps->vps_max_sub_layers);
         parse_ptl(gb, avctx, &Hevc_VPS_Ext->ptl[0], vps->vps_max_sub_layers, 0);
@@ -1145,7 +1341,10 @@ static void parse_vps_extension (GetBitContext *gb, AVCodecContext *avctx, HEVCV
 int ff_hevc_decode_nal_vps(GetBitContext *gb, AVCodecContext *avctx,
                            HEVCParamSets *ps)
 {
-    printBitContext(gb);
+    // printBitContext(gb);
+#if VERBOSE
+    printf("!!! no encrypt in ff_hevc_decode_nal_vps\n");
+#endif
     int i,j;
     HEVCVPS *vps;
     AVBufferRef *vps_buf = av_buffer_allocz(sizeof(*vps));
@@ -1327,7 +1526,9 @@ static void decode_vui(GetBitContext *gb, AVCodecContext *avctx,
     int sar_present, alt = 0;
 
     av_log(avctx, AV_LOG_DEBUG, "Decoding VUI\n");
-
+#if VERBOSE
+    printf("!!! no encrypt in decode_vui\n");
+#endif
     sar_present = get_bits1(gb);
     print_cabac("aspect_ratio_info_present_flag", sar_present);
     if (sar_present) {
@@ -1544,7 +1745,9 @@ static int scaling_list_data(GetBitContext *gb, AVCodecContext *avctx, ScalingLi
     int32_t scaling_list_dc_coef[2][6];
     int size_id, matrix_id, pos;
     int i;
-
+#if VERBOSE
+    printf("!!! no encrypt in scaling_list_data\n");
+#endif
     for (size_id = 0; size_id < 4; size_id++)
         for (matrix_id = 0; matrix_id < 6; matrix_id += ((size_id == 3) ? 3 : 1)) {
             scaling_list_pred_mode_flag = get_bits1(gb);
@@ -1612,6 +1815,10 @@ static int scaling_list_data(GetBitContext *gb, AVCodecContext *avctx, ScalingLi
 
 static int sps_range_extensions(GetBitContext *gb, AVCodecContext *avctx, HEVCSPS *sps)
 {
+
+#if VERBOSE
+    printf("!!! no encrypt in sps_range_extensions\n");
+#endif
     sps->transform_skip_rotation_enabled_flag    = get_bits1(gb);
     sps->transform_skip_context_enabled_flag     = get_bits1(gb);
     sps->implicit_rdpcm_enabled_flag             = get_bits1(gb);
@@ -1649,6 +1856,9 @@ static int sps_range_extensions(GetBitContext *gb, AVCodecContext *avctx, HEVCSP
 //FIXME: this functions only reads one element and returns nothing
 static int sps_multilayer_extensions(GetBitContext *gb, AVCodecContext *avctx, HEVCSPS *sps)
 {
+#if VERBOSE
+    printf("!!! no encrypt in sps_multilayer_extensions\n");
+#endif
     uint8_t inter_view_mv_vert_constraint_flag = get_bits1(gb);
     print_cabac("inter_view_mv_vert_constraint_flag",  inter_view_mv_vert_constraint_flag);
     return 0;
@@ -1665,7 +1875,9 @@ int ff_hevc_parse_sps(HEVCSPS *sps, GetBitContext *gb, unsigned int *sps_id,
     int i;
     av_log(NULL, AV_LOG_INFO, "Parsing SPS : size:%d %d \n", gb->size_in_bits >> 3, gb->buffer_end - gb->buffer);
     print_cabac(" \n --- parse sps --- \n ", nuh_layer_id);
-
+#if VERBOSE
+    printf("!!! no encrypt in ff_hevc_parse_sps\n");
+#endif
     //FIXME: We should not need to init those since sps use allocz
     sps->v1_compatible = 1;
     sps->chroma_format_idc = 1; //FIXME shouldn't it be passing from BL
@@ -2311,7 +2523,9 @@ static void hevc_pps_free(void *opaque, uint8_t *data)
 static int pps_range_extensions(GetBitContext *gb, AVCodecContext *avctx,
                                 HEVCPPS *pps) {
     int i;
-
+#if VERBOSE
+    printf("!!! no encrypt in pps_range_extensions\n");
+#endif
     if (pps->transform_skip_enabled_flag) {
         pps->log2_max_transform_skip_block_size = get_ue_golomb_long(gb) + 2;
         print_cabac("log2_max_transform_skip_block_size", pps->log2_max_transform_skip_block_size);
@@ -2543,6 +2757,9 @@ static void setCuboidVertexResTree( TCom3DAsymLUT * pc3DAsymLUT, int yIdx , int 
 static int ReadParam( GetBitContext   *gb, int rParam ) {
   unsigned int prefix, codeWord, rSymbol, sign;
   int param;
+#if VERBOSE
+  printf("!!! no encrypt in ReadParam\n");
+#endif
   prefix   = get_ue_golomb_long(gb);
   print_cabac("quotient", prefix);
   codeWord = get_bits(gb, rParam);
@@ -2562,6 +2779,9 @@ static int ReadParam( GetBitContext   *gb, int rParam ) {
 static void xParse3DAsymLUTOctant( GetBitContext *gb , TCom3DAsymLUT * pc3DAsymLUT , int nDepth , int yIdx , int uIdx , int vIdx , int length) {
     uint8_t split_octant_flag = nDepth < pc3DAsymLUT->cm_octant_depth;
     int l,m,n, nYPartNum;
+#if VERBOSE
+    printf("!!! no encrypt in xParse3DAsymLUTOctant\n");
+#endif
     if(split_octant_flag){
       split_octant_flag = get_bits1(gb);
       print_cabac("split_octant_flag", split_octant_flag);
@@ -2640,7 +2860,9 @@ static void xParse3DAsymLUT(GetBitContext *gb, TCom3DAsymLUT * pc3DAsymLUT) {
 
     pc3DAsymLUT->num_cm_ref_layers_minus1 = get_ue_golomb_long(gb);
     print_cabac("num_cm_ref_layers_minus1", pc3DAsymLUT->num_cm_ref_layers_minus1);
-
+#if VERBOSE
+    printf("!!! no encrypt in xParse3DAsymLUT\n");
+#endif
     for(  i = 0 ; i <= pc3DAsymLUT->num_cm_ref_layers_minus1; i++ ) {
         pc3DAsymLUT->uiRefLayerId[i] = get_bits(gb, 6);
         print_cabac("cm_ref_layer_id", pc3DAsymLUT->uiRefLayerId[i]);
@@ -2701,7 +2923,9 @@ static void xParse3DAsymLUT(GetBitContext *gb, TCom3DAsymLUT * pc3DAsymLUT) {
 static int pps_multilayer_extensions(GetBitContext *gb, AVCodecContext *avctx,
                                 HEVCPPS *pps) {
     int i;
-
+#if VERBOSE
+    printf("!!! no encrypt in pps_multilayer_extensions\n");
+#endif
     pps->poc_reset_info_present_flag = get_bits1(gb);
     pps->pps_infer_scaling_list_flag = get_bits1(gb);
 
@@ -2806,7 +3030,9 @@ int ff_hevc_decode_nal_pps(GetBitContext *gb, AVCodecContext *avctx,
     AVBufferRef *pps_buf;
     HEVCSPS     *sps = NULL;
     HEVCPPS     *pps = av_mallocz(sizeof(*pps));
-
+#if VERBOSE
+    printf("!!! no encrypt in ff_hevc_decode_nal_pps\n");
+#endif
     av_log(NULL, AV_LOG_INFO, "Parsing PPS : size:%d %d\n", gb->size_in_bits, gb->buffer_end - gb->buffer);
 
     int i, ret = 0;

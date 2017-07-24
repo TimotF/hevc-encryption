@@ -45,7 +45,7 @@ typedef struct CABACContext{
     int range;
     int outstanding_count;
     const uint8_t *bytestream_start;
-    const uint8_t *bytestream;
+    uint8_t *bytestream;
     const uint8_t *bytestream_end;
     PutBitContext pb;
 }CABACContext;

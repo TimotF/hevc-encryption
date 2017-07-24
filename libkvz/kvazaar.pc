@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+incdir=${prefix}/include
+
+Name: libkvazaar
+Description: Open-source HEVC encoder
+Version: 1.1.0
+Libs: -L${libdir} -lkvazaar
+Libs.private:  -lm  -lcrypto++ -lstdc++ -lrt
+Cflags: -I${incdir}

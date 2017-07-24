@@ -29,6 +29,7 @@
 
 #include <stdint.h>
 
+#include "hevc.h"
 #include "cabac.h"
 #include "config.h"
 
@@ -208,5 +209,6 @@ static av_unused const uint8_t* skip_bytes(CABACContext *c, int n) {
     return ptr;
 }
 #endif
+
 
 #endif /* AVCODEC_CABAC_FUNCTIONS_H */

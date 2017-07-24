@@ -250,7 +250,7 @@ int oh_decode(OHHandle openHevcHandle, const unsigned char *buff, int au_len,
     }
 
     if (len < 0) {
-        fprintf(stderr, "Error while decoding frame \n");
+        fprintf(stderr, "oh_decode : Error while decoding frame \n");
         return -1;
     }
 
@@ -327,7 +327,7 @@ int oh_decode_lhvc(OHHandle openHevcHandle, const unsigned char *buff,
            gpic += 1 << i;
 
         if (len < 0) {
-            fprintf(stderr, "Error while decoding frame \n");
+            fprintf(stderr, "oh_decode_lhvc : Error while decoding frame \n");
             return -1;
         }
     }

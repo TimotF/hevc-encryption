@@ -2211,14 +2211,13 @@ static int unrefcount_frame(AVCodecInternal *avci, AVFrame *frame)
 }
 
 int attribute_align_arg avcodec_decode_video2(AVCodecContext *avctx, AVFrame *picture,
-                                              int *got_picture_ptr,
-                                              const AVPacket *avpkt)
+                                              int *got_picture_ptr, AVPacket *avpkt)
 {
     AVCodecInternal *avci = avctx->internal;
     int ret;
     // copy to ensure we do not change avpkt
-    AVPacket tmp = *avpkt;
-
+    //AVPacket tmp = *avpkt;
+    
     if (!avctx->codec)
         return AVERROR(EINVAL);
     if (avctx->codec->type != AVMEDIA_TYPE_VIDEO) {
@@ -2244,18 +2243,19 @@ int attribute_align_arg avcodec_decode_video2(AVCodecContext *avctx, AVFrame *pi
 
     if ((avctx->codec->capabilities & AV_CODEC_CAP_DELAY) || avpkt->size ||
         (avctx->active_thread_type & FF_THREAD_FRAME)) {
-        int did_split = av_packet_split_side_data(&tmp);
-        ret = apply_param_change(avctx, &tmp);
+        int did_split = av_packet_split_side_data(avpkt);
+        ret = apply_param_change(avctx, avpkt);
         if (ret < 0)
             goto fail;
 
-        avctx->internal->pkt = &tmp;
+        avctx->internal->pkt = avpkt;
         if (HAVE_THREADS && avctx->active_thread_type & FF_THREAD_FRAME)
             ret = ff_thread_decode_frame(avctx, picture, got_picture_ptr,
-                                         &tmp);
+                                         avpkt);
         else {
             ret = avctx->codec->decode(avctx, picture, got_picture_ptr,
-                                       &tmp);
+                                       avpkt);
+                
             if (!(avctx->codec->caps_internal & FF_CODEC_CAP_SETS_PKT_DTS))
                 picture->pkt_dts = avpkt->dts;
 
@@ -2277,9 +2277,9 @@ fail:
 
         avctx->internal->pkt = NULL;
         if (did_split) {
-            av_packet_free_side_data(&tmp);
-            if(ret == tmp.size)
-                ret = avpkt->size;
+            av_packet_free_side_data(avpkt);
+            // if(ret == tmp.size)
+            //     ret = avpkt->size;
         }
         if (picture->flags & AV_FRAME_FLAG_DISCARD) {
             *got_picture_ptr = 0;
