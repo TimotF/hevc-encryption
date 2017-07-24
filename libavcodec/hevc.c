@@ -702,7 +702,9 @@ int set_el_parameter(HEVCContext *s) {
 
 static int hls_slice_header(HEVCContext *s)
 {
-    //printf("hls_slice_header\n");
+#if VERBOSE
+    printf("hls_slice_header\n");
+#endif
     GetBitContext *gb = &s->HEVClc->gb;
     SliceHeader *sh   = &s->sh;
 //#if PARALLEL_SLICE
@@ -4104,10 +4106,11 @@ static int decode_nal_unit(HEVCContext *s, const uint8_t *nal, int length)
     int ctb_addr_ts, ret;
 
 #if HEVC_DECRYPT
-    #if VERBOSE
-        printf("clear bitstream\n");
-    #endif
-    kvz_bitstream_clear(lc->ccc.stream);
+    cabac_data_t *const cabac = &lc->ccc;
+#if VERBOSE
+    printf("clear bitstream\n");
+#endif
+    kvz_bitstream_clear(cabac->stream);
 
 #endif
 
@@ -4177,6 +4180,9 @@ static int decode_nal_unit(HEVCContext *s, const uint8_t *nal, int length)
         }
 #endif
         ret = hls_slice_header(s);
+#if HEVC_DECRYPT
+        kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
+#endif
 
 #if 0
         if (ret == -10)
@@ -4766,12 +4772,12 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         if(size_start_code){
     #if VERBOSE
         printf("saving start_nal_code in buffer\n");
-            /*printf("------------start_code-----------\n");
+            printf("------------start_code-----------\n");
             int indx;
             for (indx = 0; indx < size_start_code[i];indx++){
                 printf("%02x ", nal_start_code[i][indx]);
             }
-            printf("\n----------------------------------\n");*/
+            printf("\n----------------------------------\n");
     #endif
             if (*data_length < packet_length + size_start_code[i])
                 packet_buffer = av_realloc(packet_buffer, packet_length + size_start_code[i]);
