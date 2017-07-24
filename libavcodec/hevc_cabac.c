@@ -581,7 +581,9 @@ static void cabac_init_decoder(HEVCContext *s)
 static void cabac_init_encoder(HEVCContext *s)
 {
 #if HEVC_DECRYPT
+    HEVCLocalContext *lc = s->HEVClc;
     kvz_cabac_start(&s->HEVClc->ccc);
+    kvz_init_cabac_contexts(&lc->ccc, s->sh.slice_qp, s->sh.slice_type);
 #else
     //TODO : gestion erreur
 #endif
@@ -613,6 +615,7 @@ static void cabac_init_state(HEVCContext *s)
 
 void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
 {
+    printf("ff_hevc_cabac_init\n");
     HEVCLocalContext *lc = s->HEVClc;
     if (ctb_addr_ts == s->ps.pps->ctb_addr_rs_to_ts[s->sh.slice_ctb_addr_rs]) {
         cabac_init_decoder(s);
@@ -644,11 +647,11 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
                     cabac_init_state(s);
                 else if (s->sh.dependent_slice_segment_flag == 1)
                     load_states(s);
-            }
-        }
 #if HEVC_DECRYPT
-        kvz_init_cabac_contexts(&lc->ccc, s->sh.slice_qp, s->sh.slice_type);
+                //kvz_init_cabac_contexts(&lc->ccc, s->sh.slice_qp, s->sh.slice_type);
 #endif
+             }
+        }
     } else {
         if (s->ps.pps->tiles_enabled_flag &&
             s->ps.pps->tile_id[ctb_addr_ts] != s->ps.pps->tile_id[ctb_addr_ts - 1]) {
@@ -681,6 +684,7 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
 #if HEVC_DECRYPT
                     HEVCLocalContext *lc = s->HEVClc;
                     cabac_data_t *const cabac = &lc->ccc;
+                    printf("!!!terminate!!!\n");
                     kvz_cabac_encode_bin_trm(cabac, (bin)?1:0);
                     kvz_cabac_finish(cabac);
                     kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
@@ -702,12 +706,12 @@ void ff_hevc_cabac_init(HEVCContext *s, int ctb_addr_ts)
                         cabac_init_state(s);
                     else
                         load_states(s);
+#if HEVC_DECRYPT
+                    //kvz_init_cabac_contexts(&lc->ccc, s->sh.slice_qp, s->sh.slice_type);
+#endif
                 }
             }
         }
-#if HEVC_DECRYPT
-        kvz_init_cabac_contexts(&lc->ccc, s->sh.slice_qp, s->sh.slice_type);
-#endif
     }
 }
 
@@ -723,6 +727,7 @@ int ff_hevc_sao_type_idx_decode(HEVCContext *s)
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.sao_type_idx_model);
 #endif
 
     if (!GET_CABAC(elem_offset[SAO_TYPE_IDX])){
@@ -803,29 +808,29 @@ uint8_t ff_hevc_sao_eo_class_decode(HEVCContext *s)
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
 #endif
-    int bin = get_cabac_bypass(&s->HEVClc->cc);
+
+    int ret = get_cabac_bypass(&s->HEVClc->cc) << 1;
+    ret |= get_cabac_bypass(&s->HEVClc->cc);
 #if HEVC_DECRYPT
-    CABAC_BIN_EP(cabac, bin, "sao_offset_abs");
+    CABAC_BINS_EP(cabac, ret, 2, "sao_eo_class");
 #endif
-    int ret = bin << 1;
-    bin = get_cabac_bypass(&s->HEVClc->cc);
-#if HEVC_DECRYPT
-    CABAC_BIN_EP(cabac, bin, "sao_offset_abs");
-#endif
-    ret    |= bin;
+   
     return ret;
 }
 
 int ff_hevc_end_of_slice_flag_decode(HEVCContext *s)
 {
+    printf("ff_hevc_end_of_slice_flag_decode\n");
     int bin = get_cabac_terminate(&s->HEVClc->cc);
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
+    printf("bin : %d\n",bin);
     kvz_cabac_encode_bin_trm(cabac, (bin) ? 1 : 0);
-    kvz_cabac_finish(cabac);
-    kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
+    //kvz_cabac_finish(cabac);
+    //kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
 #endif
+    printf("end of ff_hevc_end_of_slice_flag_decode\n");
     return bin;
 }
 
@@ -865,6 +870,7 @@ int ff_hevc_skip_flag_decode(HEVCContext *s, int x0, int y0, int x_cb, int y_cb)
 
 int ff_hevc_cu_qp_delta_abs(HEVCContext *s)
 {
+    printf("ff_hevc_cu_qp_delta_abs\n");
     int prefix_val = 0;
     int suffix_val = 0;
     int inc = 0;
@@ -924,6 +930,7 @@ int ff_hevc_cu_qp_delta_sign_flag(HEVCContext *s)
 
 int ff_hevc_cu_chroma_qp_offset_flag(HEVCContext *s)
 {
+    printf("cu_chroma_qp_offset_flag\n");
     int bin = GET_CABAC(elem_offset[CU_CHROMA_QP_OFFSET_FLAG]);
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
@@ -936,13 +943,14 @@ int ff_hevc_cu_chroma_qp_offset_flag(HEVCContext *s)
 
 int ff_hevc_cu_chroma_qp_offset_idx(HEVCContext *s)
 {
+    printf("cu_chroma_qp_offset_idx\n");
     int c_max= FFMAX(5, s->ps.pps->chroma_qp_offset_list_len_minus1);
     int i = 0;
     int bin = 1;
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
-    cabac->cur_ctx = &(cabac->ctx.cu_qp_delta_abs[0]);
+    cabac->cur_ctx = &(cabac->ctx.cu_qp_delta_abs[1]);
 #endif
     while (i < c_max && bin){
         bin = GET_CABAC(elem_offset[CU_CHROMA_QP_OFFSET_IDX]);
@@ -959,6 +967,7 @@ int ff_hevc_cu_chroma_qp_offset_idx(HEVCContext *s)
 #if COM16_C806_EMT
 uint8_t ff_hevc_emt_cu_flag_decode(HEVCContext *s, int log2_cb_size, int cbfLuma)
 {
+    printf("!!! no encrypt in ff_hevc_emt_cu_flag_decode\n");
     //uint8_t inc = ;
 	uint8_t flag_value = 0;
     if ( (s->HEVClc->cu.pred_mode == MODE_INTRA ) && s->ps.sps->use_intra_emt && ( 1 << log2_cb_size <= EMT_INTRA_MAX_CU ) && cbfLuma)
@@ -979,7 +988,7 @@ uint8_t ff_hevc_emt_cu_flag_decode(HEVCContext *s, int log2_cb_size, int cbfLuma
 uint8_t ff_hevc_emt_tu_idx_decode(HEVCContext *s, int log2_cb_size)
 {
     uint8_t trIdx = 0;
-
+    printf("!!! no encrypt in ff_hevc_emt_tu_idx_decode\n");
     if ( (s->HEVClc->cu.pred_mode == MODE_INTER) && ((1 << log2_cb_size) <= EMT_INTER_MAX_CU )){
         uint8_t uiSymbol1 = GET_CABAC(elem_offset[EMT_TU_IDX]+2);
         uint8_t uiSymbol2 = GET_CABAC(elem_offset[EMT_TU_IDX]+3);
@@ -1124,6 +1133,7 @@ int ff_hevc_pcm_flag_decode(HEVCContext *s)
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
+    printf("!!!terminate!!!\n");
     kvz_cabac_encode_bin_trm(cabac, (bin) ? 1 : 0);
     kvz_cabac_finish(cabac);
     kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
@@ -1377,6 +1387,7 @@ static av_always_inline int mvd_decode_enc(HEVCContext *s)
     int ret = 2, ret0 = 0, sign;
     int k = 1, k0;
     unsigned int key;
+    printf("!!! no encrypt in mvd_decode_enc\n");
     while (k < CABAC_MAX_BIN && get_cabac_bypass(&s->HEVClc->cc)) {
         ret += 1 << k;
         k++;
@@ -1491,6 +1502,7 @@ static int ff_hevc_transform_skip_flag_decode(HEVCContext *s, int c_idx)
 
 static int explicit_rdpcm_flag_decode(HEVCContext *s, int c_idx)
 {
+    printf("explicit_rdpcm_flag_decode\n");
     int bin = GET_CABAC(elem_offset[EXPLICIT_RDPCM_FLAG] + !!c_idx);
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
@@ -1503,6 +1515,7 @@ static int explicit_rdpcm_flag_decode(HEVCContext *s, int c_idx)
 
 static int explicit_rdpcm_dir_flag_decode(HEVCContext *s, int c_idx)
 {
+    printf("explicit_rdpcm_dir_flag_decode\n");
     int bin = GET_CABAC(elem_offset[EXPLICIT_RDPCM_DIR_FLAG] + !!c_idx);
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
@@ -1515,7 +1528,7 @@ static int explicit_rdpcm_dir_flag_decode(HEVCContext *s, int c_idx)
 
 int ff_hevc_log2_res_scale_abs(HEVCContext *s, int idx) {
     int i =0;
-
+printf("!!! no encrypt in ff_hevc_log2_res_scale_abs\n");
     while (i < 4 && GET_CABAC(elem_offset[LOG2_RES_SCALE_ABS] + 4 * idx + i))
         i++;
 
@@ -1523,6 +1536,7 @@ int ff_hevc_log2_res_scale_abs(HEVCContext *s, int idx) {
 }
 
 int ff_hevc_res_scale_sign_flag(HEVCContext *s, int idx) {
+    printf("!!! no encrypt in ff_hevc_log2_res_scale_abs\n");
     return GET_CABAC(elem_offset[RES_SCALE_SIGN_FLAG] + idx);
 }
 
@@ -1564,7 +1578,7 @@ static av_always_inline void last_significant_coeff_xy_prefix_decode(HEVCContext
 #if HEVC_DECRYPT
         int offset = (i >> ctx_shift) + ctx_offset;
         cabac->cur_ctx = (offset < 15) ? &(cabac->ctx.cu_ctx_last_y_luma[offset]) : &(cabac->ctx.cu_ctx_last_y_chroma[offset - 15]);
-        CABAC_BIN(cabac, bin, "last_sig_coeff_x_prefix");
+        CABAC_BIN(cabac, bin, "last_sig_coeff_y_prefix");
 #endif
         if(bin)
             i++;

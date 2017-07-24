@@ -270,7 +270,7 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size,
 
 #if HEVC_DECRYPT
         if(i <= openHevcContexts->active_layer && ret>0){
-#if VERBOSE
+#if VERBOSE/*
             printf("\n-----openHevcWrapper-----\n");
             printf("address of the original buffer : %p (size = %d)\n",*buff,*size);
             printf("new address for the data : %p (size = %d)\n",openHevcContext->avpkt.data,openHevcContext->avpkt.size);
@@ -281,7 +281,7 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size,
             printf("\n");
             //printf("size : %d; %d\n",*size,openHevcContext->avpkt.size);
             //printf("data : %p; %p\n",*buff,openHevcContext->avpkt.data);
-            printf("---------------------------\n");
+            printf("---------------------------\n");*/
 #endif
             if(size != NULL)
                 *size = decoded_length;

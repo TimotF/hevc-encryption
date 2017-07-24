@@ -44,7 +44,7 @@ static int theora_header(AVFormatContext *s, int idx)
     int cds               = st->codecpar->extradata_size + os->psize + 2;
     int err;
     uint8_t *cdp;
-
+    printf("!!! no encrypt in theora_header\n");
     if (!(os->buf[os->pstart] & 0x80))
         return 0;
 

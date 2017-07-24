@@ -299,7 +299,7 @@ void kvz_init_contexts(encoder_state_t *state, int8_t QP, int8_t slice)
 void kvz_init_cabac_contexts(cabac_data_t *cabac, int8_t QP, int8_t slice)
 {
   uint16_t i;
-
+printf("init contexts\n");
   // Initialize contexts
   kvz_ctx_init(&cabac->ctx.transform_skip_model_luma, QP, INIT_TRANSFORMSKIP_FLAG[slice][0]);
   kvz_ctx_init(&cabac->ctx.transform_skip_model_chroma, QP, INIT_TRANSFORMSKIP_FLAG[slice][1]);

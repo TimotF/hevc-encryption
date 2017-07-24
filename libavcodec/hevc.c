@@ -1567,6 +1567,7 @@ do {                                                    \
 
 static void hls_sao_param(HEVCContext *s, int rx, int ry)
 {
+    printf("hls_sao_param\n");
     HEVCLocalContext *lc    = s->HEVClc;
 #if HEVC_DECRYPT
     cabac_data_t *const cabac = &lc->ccc;
@@ -1611,9 +1612,6 @@ static void hls_sao_param(HEVCContext *s, int rx, int ry)
             sao->type_idx[2] = sao->type_idx[1];
             sao->eo_class[2] = sao->eo_class[1];
         } else {
-#if HEVC_DECRYPT
-            cabac->cur_ctx = &(cabac->ctx.sao_type_idx_model);
-#endif
             SET_SAO(type_idx[c_idx], ff_hevc_sao_type_idx_decode(s));
         }
 
@@ -3124,6 +3122,7 @@ static int hls_coding_quadtree(HEVCContext *s, int x0, int y0,
 static void hls_decode_neighbour(HEVCContext *s, int x_ctb, int y_ctb,
                                  int ctb_addr_ts)
 {
+    printf("hls_decode_neighbour\n");
     HEVCLocalContext *lc  = s->HEVClc;
     int ctb_size          = 1 << s->ps.sps->log2_ctb_size;
     int ctb_addr_rs       = s->ps.pps->ctb_addr_ts_to_rs[ctb_addr_ts];
@@ -3178,6 +3177,7 @@ static int hls_decode_entry(AVCodecContext *avctxt, void *isFilterThread)
     int x_ctb       = 0;
     int y_ctb       = 0;
     int ctb_addr_ts = s->ps.pps->ctb_addr_rs_to_ts[s->sh.slice_ctb_addr_rs];
+    int i = 1;
 
     if (!ctb_addr_ts && s->sh.dependent_slice_segment_flag) {
         av_log(s->avctx, AV_LOG_ERROR, "Impossible initial tile.\n");
@@ -3193,6 +3193,7 @@ static int hls_decode_entry(AVCodecContext *avctxt, void *isFilterThread)
     }
 
     while (more_data && ctb_addr_ts < s->ps.sps->ctb_size) {
+        printf("loop %d\n",i++);
         int ctb_addr_rs = s->ps.pps->ctb_addr_ts_to_rs[ctb_addr_ts];
         s->HEVClc->tile_id = s->ps.pps->tile_id[ctb_addr_ts];
 
