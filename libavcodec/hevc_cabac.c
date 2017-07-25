@@ -1765,19 +1765,15 @@ static av_always_inline int coeff_abs_level_remaining_decode_enc(HEVCContext *s,
         av_log(s->avctx, AV_LOG_ERROR, "CABAC_MAX_BIN : %d\n", prefix);
     if (prefix < 3) {
         for (i = 0; i < rc_rice_param; i++){
-            bin = get_cabac_bypass(&s->HEVClc->cc);
-            suffix = (suffix << 1) | bin;
-#if HEVC_DECRYPT
-            CABAC_BIN_EP(cabac, bin, "coeff_abs_level_remaining");
-#endif
+            suffix = (suffix << 1) | get_cabac_bypass(&s->HEVClc->cc);
         }
         unsigned int codeNumber=(prefix << (rc_rice_param)) + suffix;
         unsigned int res=suffix;
         if(rc_rice_param==1) {
             if(!(( base ==2 )&& (codeNumber==4 || codeNumber==5) ) ) {
                 key = ff_get_key (&s->HEVClc->dbs_g, 1);
-                codeNumber=(prefix << (rc_rice_param)) +
-                (((s->HEVClc->prev_pos^key ) & 1)^suffix);
+                suffix = (((s->HEVClc->prev_pos ^ key) & 1) ^ suffix);
+                codeNumber=(prefix << (rc_rice_param)) + suffix;
                 s->HEVClc->prev_pos=res;
             }
         } else
@@ -1926,21 +1922,22 @@ static av_always_inline int coeff_abs_level_remaining_decode_enc(HEVCContext *s,
                                         }
                         }
                     }
+#if HEVC_DECRYPT
+        CABAC_BINS_EP(cabac, suffix, rc_rice_param, "coeff_abs_level_remaining");
+#endif
         last_coeff_abs_level_remaining = codeNumber;
     } else { // EG code does not change
         int prefix_minus3 = prefix - 3;
-        for (i = 0; i < prefix_minus3 + rc_rice_param; i++){
-            bin = get_cabac_bypass(&s->HEVClc->cc);
-            suffix = (suffix << 1) | bin;
-#if HEVC_DECRYPT
-            CABAC_BIN_EP(cabac, bin, "coeff_abs_level_remaining");
-#endif
-        }
+        for (i = 0; i < prefix_minus3 + rc_rice_param; i++)
+                suffix = (suffix << 1) | get_cabac_bypass(&s->HEVClc->cc);
         key = ff_get_key (&s->HEVClc->dbs_g, prefix_minus3 + rc_rice_param);
         s->HEVClc->prev_pos = suffix - (s->HEVClc->prev_pos^key);
         key = (s->HEVClc->prev_pos&((1<<(prefix_minus3 + rc_rice_param))-1));
         s->HEVClc->prev_pos = suffix;
         suffix = key;
+#if HEVC_DECRYPT
+        CABAC_BINS_EP(cabac, suffix, prefix_minus3 + rc_rice_param, "coeff_abs_level_remaining");
+#endif
         last_coeff_abs_level_remaining = (((1 << prefix_minus3) + 3 - 1)
                                           << rc_rice_param) + suffix;
     }
@@ -1984,23 +1981,19 @@ static av_always_inline int coeff_abs_level_remaining_decode(HEVCContext *s, int
     if (prefix == CABAC_MAX_BIN)
         av_log(s->avctx, AV_LOG_ERROR, "CABAC_MAX_BIN : %d\n", prefix);
     if (prefix < 3) {
-        for (i = 0; i < rc_rice_param; i++){
-            bin = get_cabac_bypass(&s->HEVClc->cc);
-            suffix = (suffix << 1) | bin;
+        for (i = 0; i < rc_rice_param; i++)
+            suffix = (suffix << 1) | get_cabac_bypass(&s->HEVClc->cc);
 #if HEVC_DECRYPT
-            CABAC_BIN_EP(cabac, bin, "coeff_abs_level_remaining");
+        CABAC_BINS_EP(cabac, suffix, rc_rice_param, "coeff_abs_level_remaining");
 #endif
-        }
         last_coeff_abs_level_remaining = (prefix << rc_rice_param) + suffix;
     } else {
         int prefix_minus3 = prefix - 3;
-        for (i = 0; i < prefix_minus3 + rc_rice_param; i++){
-            bin = get_cabac_bypass(&s->HEVClc->cc);
-            suffix = (suffix << 1) | bin;
+        for (i = 0; i < prefix_minus3 + rc_rice_param; i++)
+            suffix = (suffix << 1) | get_cabac_bypass(&s->HEVClc->cc);
 #if HEVC_DECRYPT
-            CABAC_BIN_EP(cabac, bin, "coeff_abs_level_remaining");
+        CABAC_BINS_EP(cabac, suffix, prefix_minus3 + rc_rice_param, "coeff_abs_level_remaining");
 #endif
-        }
         last_coeff_abs_level_remaining = (((1 << prefix_minus3) + 3 - 1)
                                               << rc_rice_param) + suffix;
     }
