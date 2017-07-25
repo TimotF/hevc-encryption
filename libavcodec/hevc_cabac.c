@@ -1446,15 +1446,6 @@ static av_always_inline int mvd_decode_enc(HEVCContext *s)
     sign = mvd_sign_flag_decode(s);
     ret = sign == -1 ? -ret : ret;
 
-    unsigned int sign_flag;
-    if (s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MV_SIGNS))
-    {
-        sign_flag = ret < 0 ? 1 : 0;
-        sign_flag = sign_flag ^ (ff_get_key(&s->HEVClc->dbs_g, 1));
-        ret = sign_flag == 1 ? -abs(ret) : abs(ret);
-    }
-
-
     return ret;
 }
 #endif
