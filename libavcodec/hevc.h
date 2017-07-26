@@ -1717,7 +1717,7 @@ int ff_hevc_res_scale_sign_flag(HEVCContext *s, int idx);
 #if HEVC_DECRYPT
 void ff_hevc_prev_intra_luma_pred_flag_encode(HEVCContext *s, int bin);
 void ff_hevc_mpm_idx_encode(HEVCContext *s, int val);
-
+void ff_hevc_rem_intra_luma_pred_mode_encode(HEVCContext *s, int value);
 #endif
 
 /**

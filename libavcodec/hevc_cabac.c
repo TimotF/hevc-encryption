@@ -1206,23 +1206,26 @@ int ff_hevc_rem_intra_luma_pred_mode_decode(HEVCContext *s)
 {
     int i, bin;
     int value = get_cabac_bypass(&s->HEVClc->cc);
+
+    for (i = 0; i < 4; i++)
+        value = (value << 1) | get_cabac_bypass(&s->HEVClc->cc);
+
 #if HEVC_DECRYPT
-    HEVCLocalContext *lc = s->HEVClc;
-    cabac_data_t *const cabac = &lc->ccc;
     if (!(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)))
-        CABAC_BIN_EP(cabac, value, "rem_intra_luma_pred_mode");
+        ff_hevc_rem_intra_luma_pred_mode_encode(s,value);
 #endif
 
-    for (i = 0; i < 4; i++){
-        bin = get_cabac_bypass(&s->HEVClc->cc);
-#if HEVC_DECRYPT
-        if (!(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)))
-            CABAC_BIN_EP(cabac, bin, "rem_intra_luma_pred_mode");
-#endif
-        value = (value << 1) | bin;
-    }
     return value;
 }
+
+#if HEVC_DECRYPT
+void ff_hevc_rem_intra_luma_pred_mode_encode(HEVCContext *s, int value)
+{
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    CABAC_BINS_EP(cabac, value, 5, "rem_intra_luma_pred_mode");
+}
+#endif
 
 int ff_hevc_intra_chroma_pred_mode_decode(HEVCContext *s)
 {
