@@ -1714,6 +1714,12 @@ int ff_hevc_cbf_luma_decode(HEVCContext *s, int trafo_depth);
 int ff_hevc_log2_res_scale_abs(HEVCContext *s, int idx);
 int ff_hevc_res_scale_sign_flag(HEVCContext *s, int idx);
 
+#if HEVC_DECRYPT
+void ff_hevc_prev_intra_luma_pred_flag_encode(HEVCContext *s, int bin);
+void ff_hevc_mpm_idx_encode(HEVCContext *s, int val);
+
+#endif
+
 /**
  * Get the number of candidate references for the current frame.
  */

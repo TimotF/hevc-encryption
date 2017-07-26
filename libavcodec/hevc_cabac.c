@@ -1152,32 +1152,55 @@ int ff_hevc_prev_intra_luma_pred_flag_decode(HEVCContext *s)
 {
     int bin = GET_CABAC(elem_offset[PREV_INTRA_LUMA_PRED_FLAG]);
 #if HEVC_DECRYPT
-    HEVCLocalContext *lc = s->HEVClc;
-    cabac_data_t *const cabac = &lc->ccc;
-    cabac->cur_ctx = &(cabac->ctx.intra_mode_model);
-    CABAC_BIN(cabac, bin, "prev_intra_luma_pred_flag");
+    if (!(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)))
+        ff_hevc_prev_intra_luma_pred_flag_encode(s,bin);
 #endif
     return bin;
 }
 
-int ff_hevc_mpm_idx_decode(HEVCContext *s)
-{
 #if HEVC_DECRYPT
+void ff_hevc_prev_intra_luma_pred_flag_encode(HEVCContext *s, int bin)
+{
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
+    cabac->cur_ctx = &(cabac->ctx.intra_mode_model);
+    CABAC_BIN(cabac, bin, "prev_intra_luma_pred_flag");
+}
 #endif
+
+int ff_hevc_mpm_idx_decode(HEVCContext *s)
+{
     int i = 0;
-    int bin = 1;
-    while (i < 2 && bin){
-        bin = get_cabac_bypass(&s->HEVClc->cc);
+    while (i < 2 && get_cabac_bypass(&s->HEVClc->cc))
+        i++;
+
 #if HEVC_DECRYPT
-        CABAC_BIN_EP(cabac, bin, "mpm_idx");
+    if (!(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)))
+        ff_hevc_mpm_idx_encode(s,i);
 #endif
-        if(bin)
-            i++;
-    }
+
     return i;
 }
+
+#if HEVC_DECRYPT
+void ff_hevc_mpm_idx_encode(HEVCContext *s, int val)
+{
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+    int val0 = val;
+    if(val>2){
+        fprintf(stderr,"mpm_idx value is not correct\n");
+    }
+
+    while (val>0){
+        val--;
+        CABAC_BIN_EP(cabac, 1, "mpm_idx");
+    }
+    if(val0<2)
+        CABAC_BIN_EP(cabac, 0, "mpm_idx");
+}
+#endif
+
 
 int ff_hevc_rem_intra_luma_pred_mode_decode(HEVCContext *s)
 {
@@ -1186,13 +1209,15 @@ int ff_hevc_rem_intra_luma_pred_mode_decode(HEVCContext *s)
 #if HEVC_DECRYPT
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
-    CABAC_BIN_EP(cabac, value, "rem_intra_luma_pred_mode");
+    if (!(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)))
+        CABAC_BIN_EP(cabac, value, "rem_intra_luma_pred_mode");
 #endif
 
     for (i = 0; i < 4; i++){
         bin = get_cabac_bypass(&s->HEVClc->cc);
 #if HEVC_DECRYPT
-        CABAC_BIN_EP(cabac, bin, "rem_intra_luma_pred_mode");
+        if (!(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)))
+            CABAC_BIN_EP(cabac, bin, "rem_intra_luma_pred_mode");
 #endif
         value = (value << 1) | bin;
     }
