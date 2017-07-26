@@ -1150,11 +1150,8 @@ int ff_hevc_pcm_flag_decode(HEVCContext *s)
 
 int ff_hevc_prev_intra_luma_pred_flag_decode(HEVCContext *s)
 {
+    
     int bin = GET_CABAC(elem_offset[PREV_INTRA_LUMA_PRED_FLAG]);
-#if HEVC_DECRYPT
-    if (!(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)))
-        ff_hevc_prev_intra_luma_pred_flag_encode(s,bin);
-#endif
     return bin;
 }
 
@@ -1173,11 +1170,6 @@ int ff_hevc_mpm_idx_decode(HEVCContext *s)
     int i = 0;
     while (i < 2 && get_cabac_bypass(&s->HEVClc->cc))
         i++;
-
-#if HEVC_DECRYPT
-    if (!(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)))
-        ff_hevc_mpm_idx_encode(s,i);
-#endif
 
     return i;
 }
@@ -1204,16 +1196,12 @@ void ff_hevc_mpm_idx_encode(HEVCContext *s, int val)
 
 int ff_hevc_rem_intra_luma_pred_mode_decode(HEVCContext *s)
 {
+   
     int i, bin;
     int value = get_cabac_bypass(&s->HEVClc->cc);
 
     for (i = 0; i < 4; i++)
         value = (value << 1) | get_cabac_bypass(&s->HEVClc->cc);
-
-#if HEVC_DECRYPT
-    if (!(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)))
-        ff_hevc_rem_intra_luma_pred_mode_encode(s,value);
-#endif
 
     return value;
 }

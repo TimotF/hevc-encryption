@@ -2641,7 +2641,7 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
  * 8.4.1
  */
 static int luma_intra_pred_mode(HEVCContext *s, int x0, int y0, int pu_size,
-                                int prev_intra_luma_pred_flag)
+                                uint8_t *prev_intra_luma_pred_flag, uint8_t *dst)
 {
     HEVCLocalContext *lc = s->HEVClc;
     int x_pu             = x0 >> s->ps.sps->log2_min_pu_size;
@@ -2662,13 +2662,16 @@ static int luma_intra_pred_mode(HEVCContext *s, int x0, int y0, int pu_size,
     int intra_pred_mode;
     int candidate[3];
     int i, j;
+
+
 #if HEVC_ENCRYPTION
-   if(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)) {
-     cand_up   = (lc->ctb_up_flag || y0b) ?
-	                       s->tab_ipm_encry[(y_pu - 1) * min_pu_width + x_pu] : INTRA_DC;
-	 cand_left = (lc->ctb_left_flag || x0b) ?
-	                       s->tab_ipm_encry[y_pu * min_pu_width + x_pu - 1]   : INTRA_DC;
-   }
+
+    if(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)) {
+        cand_up   = (lc->ctb_up_flag || y0b) ?
+                            s->tab_ipm_encry[(y_pu - 1) * min_pu_width + x_pu] : INTRA_DC;
+        cand_left = (lc->ctb_left_flag || x0b) ?
+                            s->tab_ipm_encry[y_pu * min_pu_width + x_pu - 1]   : INTRA_DC;
+    }
 #endif
     // intra_pred_mode prediction does not cross vertical CTB boundaries
     if ((y0 - 1) < y_ctb)
@@ -2695,8 +2698,9 @@ static int luma_intra_pred_mode(HEVCContext *s, int x0, int y0, int pu_size,
             candidate[2] = INTRA_ANGULAR_26;
         }
     }
+    
 
-    if (prev_intra_luma_pred_flag) {
+    if (*prev_intra_luma_pred_flag) {
         intra_pred_mode = candidate[lc->pu.mpm_idx];
     } else {
         if (candidate[0] > candidate[1])
@@ -2717,39 +2721,94 @@ static int luma_intra_pred_mode(HEVCContext *s, int x0, int y0, int pu_size,
         size_in_pus = 1;
 
 #if HEVC_ENCRYPTION
-   if( s->tile_table_encry[s->HEVClc->tile_id]  && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)) {
-	 if(intra_pred_mode != INTRA_ANGULAR_26 && intra_pred_mode != INTRA_ANGULAR_10) {/* for correct chroma Inra prediction mode */
+    if( s->tile_table_encry[s->HEVClc->tile_id]  && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)) {
+	    if(intra_pred_mode != INTRA_ANGULAR_26 && intra_pred_mode != INTRA_ANGULAR_10) {/* for correct chroma Inra prediction mode */
 
-       int Sets[3][17] = { { 0,  1,  2,  3,  4,  5, 15, 16, 17, 18, 19, 20, 21, 31, 32, 33, 34},/* 17 */
-		                   { 22, 23, 24, 25, 27, 28, 29, 30, -1, -1, -1, -1, -1, -1, -1, -1, -1},  /* 9 */
-		                   {  6,  7,  8,  9, 11, 12, 13, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1} /* 9 */
-		                   };
-       uint8_t nb_elems[3] = {17, 8, 8};
-       uint8_t keybits, Dir, Index=0;
-	   for (i = 0; i < size_in_pus; i++)
-	     memset(&s->tab_ipm_encry[(y_pu + i) * min_pu_width + x_pu], intra_pred_mode, size_in_pus);
-	     keybits = ff_get_key (&s->HEVClc->dbs_g, 5);
-	     Dir = SCAN_DIAG;
-	     if  (intra_pred_mode >5 && intra_pred_mode < 15 )
-	       Dir = SCAN_VERT;
-	     if( intra_pred_mode > 21 && intra_pred_mode < 31 )
-	       Dir = SCAN_HORIZ;
-	     Index = 0;
-	     for(int i = 0; i < nb_elems[Dir]; i++) {
-	       if(intra_pred_mode == Sets[Dir][i]) {
-	         Index = i;
-	         break;
-	       }
-	     }
-	     keybits = keybits % nb_elems[Dir];
-	     keybits = ( Index >= keybits ? (Index-keybits) : (nb_elems[Dir] - (keybits-Index)));
-	     intra_pred_mode = Sets[Dir][keybits];
-	 } else
-	   for (i = 0; i < size_in_pus; i++)
-	     memset( &s->tab_ipm_encry[(y_pu + i) * min_pu_width + x_pu],
-	        	 	     intra_pred_mode, size_in_pus);
-   }
-#endif
+            int Sets[3][17] = { { 0,  1,  2,  3,  4,  5, 15, 16, 17, 18, 19, 20, 21, 31, 32, 33, 34},/* 17 */
+                                { 22, 23, 24, 25, 27, 28, 29, 30, -1, -1, -1, -1, -1, -1, -1, -1, -1},  /* 9 */
+                                {  6,  7,  8,  9, 11, 12, 13, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1} /* 9 */
+                                };
+            uint8_t nb_elems[3] = {17, 8, 8};
+            uint8_t keybits, Dir, Index=0;
+            for (i = 0; i < size_in_pus; i++)
+                memset(&s->tab_ipm_encry[(y_pu + i) * min_pu_width + x_pu], intra_pred_mode, size_in_pus);
+            keybits = ff_get_key (&s->HEVClc->dbs_g, 5);
+            Dir = SCAN_DIAG;
+            if(intra_pred_mode >5 && intra_pred_mode < 15 )
+                Dir = SCAN_VERT;
+            if(intra_pred_mode > 21 && intra_pred_mode < 31 )
+                Dir = SCAN_HORIZ;
+            Index = 0;
+            for(int i = 0; i < nb_elems[Dir]; i++) {
+                if(intra_pred_mode == Sets[Dir][i]) {
+                    Index = i;
+                    break;
+                }
+            }
+            keybits = keybits % nb_elems[Dir];
+            keybits = ( Index >= keybits ? (Index-keybits) : (nb_elems[Dir] - (keybits-Index)));
+            intra_pred_mode = Sets[Dir][keybits];
+        } else
+            for (i = 0; i < size_in_pus; i++)
+                memset( &s->tab_ipm_encry[(y_pu + i) * min_pu_width + x_pu],intra_pred_mode, size_in_pus);
+    }
+#endif //HEVC_ENCRYPTION
+
+#if HEVC_DECRYPT
+    cand_up = (lc->ctb_up_flag || y0b) ? s->tab_ipm[(y_pu - 1) * min_pu_width + x_pu] : INTRA_DC;
+    cand_left = (lc->ctb_left_flag || x0b) ? s->tab_ipm[y_pu * min_pu_width + x_pu - 1] : INTRA_DC;
+    // intra_pred_mode prediction does not cross vertical CTB boundaries
+    if ((y0 - 1) < y_ctb)
+        cand_up = INTRA_DC;
+
+    if (cand_left == cand_up) {
+        if (cand_left < 2) {
+            candidate[0] = INTRA_PLANAR;
+            candidate[1] = INTRA_DC;
+            candidate[2] = INTRA_ANGULAR_26;
+        } else {
+            candidate[0] = cand_left;
+            candidate[1] = 2 + ((cand_left - 2 - 1 + 32) & 31);
+            candidate[2] = 2 + ((cand_left - 2 + 1) & 31);
+        }
+    } else {
+        candidate[0] = cand_left;
+        candidate[1] = cand_up;
+        if (candidate[0] != INTRA_PLANAR && candidate[1] != INTRA_PLANAR) {
+            candidate[2] = INTRA_PLANAR;
+        } else if (candidate[0] != INTRA_DC && candidate[1] != INTRA_DC) {
+            candidate[2] = INTRA_DC;
+        } else {
+            candidate[2] = INTRA_ANGULAR_26;
+        }
+    }
+    
+    int mode_found = 0;
+    for(i=0;i<3&&mode_found==0;i++){
+        if(intra_pred_mode==candidate[i]){
+            mode_found = 1;
+            *dst = i;
+        }
+    }
+    if(!mode_found){
+        if (candidate[0] > candidate[1])
+            FFSWAP(uint8_t, candidate[0], candidate[1]);
+        if (candidate[0] > candidate[2])
+            FFSWAP(uint8_t, candidate[0], candidate[2]);
+        if (candidate[1] > candidate[2])
+            FFSWAP(uint8_t, candidate[1], candidate[2]);
+        int mode = intra_pred_mode;
+        for (i = 2; i >=0; i--)
+            if (mode > candidate[i])
+                mode--;
+        *dst = mode;
+    } 
+    *prev_intra_luma_pred_flag = mode_found;
+
+    
+#endif  //HEVC_DECRYPT
+
+
    for (i = 0; i < size_in_pus; i++) {
      memset(&s->tab_ipm[(y_pu + i) * min_pu_width + x_pu],
                intra_pred_mode, size_in_pus);
@@ -2758,6 +2817,7 @@ static int luma_intra_pred_mode(HEVCContext *s, int x0, int y0, int pu_size,
             tab_mvf[(y_pu + j) * min_pu_width + x_pu + i].pred_flag = PF_INTRA;
      }
    }
+
    return intra_pred_mode;
 }
 
@@ -2789,6 +2849,9 @@ static void intra_prediction_unit(HEVCContext *s, int x0, int y0,
     int side    = split + 1;
     int chroma_mode;
     int i, j;
+#if HEVC_DECRYPT
+    uint8_t intra_pred_mode_or_mpm_idx[4];  // Contains intra_pred_mode or mpm_idx depending on the related flag
+#endif
 
     for (i = 0; i < side; i++)
         for (j = 0; j < side; j++)
@@ -2803,9 +2866,27 @@ static void intra_prediction_unit(HEVCContext *s, int x0, int y0,
 
             lc->pu.intra_pred_mode[2 * i + j] =
                 luma_intra_pred_mode(s, x0 + pb_size * j, y0 + pb_size * i, pb_size,
-                                     prev_intra_luma_pred_flag[2 * i + j]);
+                                     &prev_intra_luma_pred_flag[2 * i + j], &intra_pred_mode_or_mpm_idx[2 * i + j]);
         }
     }
+#if 1
+    //if intra_pred_mode ciphering is enabled, we reencode every flag and mode previously deciphered
+    //if (s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)){
+        for (i = 0; i < side; i++)
+            for (j = 0; j < side; j++)
+                ff_hevc_prev_intra_luma_pred_flag_encode(s, prev_intra_luma_pred_flag[2 * i + j]);
+        
+        for (i = 0; i < side; i++) {
+            for (j = 0; j < side; j++) {
+                if (prev_intra_luma_pred_flag[2 * i + j])
+                    ff_hevc_mpm_idx_encode(s, intra_pred_mode_or_mpm_idx[2 * i + j]);
+                else
+                    ff_hevc_rem_intra_luma_pred_mode_encode(s, intra_pred_mode_or_mpm_idx[2 * i + j]);
+            }
+        }
+    //}
+#endif
+
 
     if (s->ps.sps->chroma_format_idc == 3) {
         for (i = 0; i < side; i++) {
