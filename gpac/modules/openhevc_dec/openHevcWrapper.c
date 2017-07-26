@@ -268,7 +268,7 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size,
         if(i < openHevcContexts->active_layer)
             openHevcContexts->wraper[i+1]->c->BL_frame = openHevcContexts->wraper[i]->c->BL_frame;
 
-#if HEVC_DECRYPT
+#if HEVC_CIPHERING 
         if(i <= openHevcContexts->active_layer && ret>0){
 #if VERBOSE/*
             printf("\n-----openHevcWrapper-----\n");

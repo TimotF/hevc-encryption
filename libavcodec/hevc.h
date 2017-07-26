@@ -1354,10 +1354,10 @@ typedef struct HEVCLocalContext {
     GetBitContext gb;
     CABACContext cc;
 
-#if HEVC_DECRYPT
+#if HEVC_CIPHERING 
     bitstream_t stream;
     cabac_data_t ccc; //cabac context for hevc crypto (decryption/encryption)
-#endif //HEVC_DECRYPT
+#endif //HEVC_CIPHERING 
 
     int8_t qp_y;
     int8_t curr_qp_y;
@@ -1619,7 +1619,7 @@ typedef struct HEVCContext {
 int ff_hevc_decode_short_term_rps(GetBitContext *gb, AVCodecContext *avctx,
                                   ShortTermRPS *rps, const HEVCSPS *sps, int is_slice_header);
 
-#if HEVC_DECRYPT
+#if HEVC_CIPHERING 
 int ff_hevc_decode_short_term_rps_decrypt(bitstream_t *stream, GetBitContext *gb, AVCodecContext *avctx,
                                           ShortTermRPS *rps, const HEVCSPS *sps, int is_slice_header);
 #endif
@@ -1714,7 +1714,7 @@ int ff_hevc_cbf_luma_decode(HEVCContext *s, int trafo_depth);
 int ff_hevc_log2_res_scale_abs(HEVCContext *s, int idx);
 int ff_hevc_res_scale_sign_flag(HEVCContext *s, int idx);
 
-#if HEVC_DECRYPT
+#if HEVC_CIPHERING 
 void ff_hevc_prev_intra_luma_pred_flag_encode(HEVCContext *s, int bin);
 void ff_hevc_mpm_idx_encode(HEVCContext *s, int val);
 void ff_hevc_rem_intra_luma_pred_mode_encode(HEVCContext *s, int value);
