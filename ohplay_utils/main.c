@@ -74,8 +74,8 @@ static const OptionDef options[] = {
     { "v", OPT_BOOL, { &h264_flags }, "Input is a h264 bitstream" },
     { "e", HAS_ARG | OPT_STRING, { &enhance_file }, "Enhanced layer file (with AVC base)", "file" },
     {"-crypto", HAS_ARG | OPT_ENUM, {&crypto_args}, " Encryption configuration","params"},
-    {"-key", HAS_ARG | OPT_DATA, {&crypto_key},"overload default cipher key", "(16 bytes)"},
     {"-cipher", HAS_ARG | OPT_ENUM, {&cipher_args},"ciphering configuration", "params"},
+    {"-key", HAS_ARG | OPT_DATA, {&crypto_key},"overload default cipher key", "(16 bytes)"},
     { NULL, },
 };
 

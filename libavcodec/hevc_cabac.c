@@ -1399,7 +1399,8 @@ static av_always_inline int mvd_sign_flag_decode(HEVCContext *s)
 #if HEVC_ENCRYPTION
 
     unsigned int sign_flag;
-    if (s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MV_SIGNS))
+    if ((s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MV_SIGNS)) 
+    ^ (s->tile_table_encry[s->HEVClc->tile_id] && (s->ciphering_params & HEVC_CRYPTO_MV_SIGNS)))
     {
         sign_flag = bin < 0 ? 1 : 0;
         sign_flag = sign_flag ^ (ff_get_key(&s->HEVClc->dbs_g, 1));
@@ -1512,7 +1513,8 @@ static av_always_inline int mvd_decode(HEVCContext *s)
 #if HEVC_ENCRYPTION
 
     unsigned int sign_flag;
-    if (s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MV_SIGNS))
+    if ((s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MV_SIGNS)) 
+    ^ (s->tile_table_encry[s->HEVClc->tile_id] && (s->ciphering_params & HEVC_CRYPTO_MV_SIGNS)))
     {
         sign_flag = bin < 0 ? 1 : 0;
         sign_flag = sign_flag ^ (ff_get_key(&s->HEVClc->dbs_g, 1));
@@ -2607,9 +2609,7 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
 
 void ff_hevc_hls_mvd_coding(HEVCContext *s, int x0, int y0, int log2_cb_size)
 {
-#if 0
-    unsigned int mvd_sign_flag_x=0, mvd_sign_flag_y=0;
-#endif
+
     HEVCLocalContext *lc = s->HEVClc;
     int x = abs_mvd_greater0_flag_decode(s);
     int y = abs_mvd_greater0_flag_decode(s);
@@ -2624,29 +2624,13 @@ void ff_hevc_hls_mvd_coding(HEVCContext *s, int x0, int y0, int log2_cb_size)
         case 1: lc->pu.mvd.x = mvd_sign_flag_decode(s); break;
         case 0: lc->pu.mvd.x = 0;                       break;
     }
-#if 0
-    if(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MV_SIGNS)) {
-      if(x==2) {
-        mvd_sign_flag_x = lc->pu.mvd.x < 0 ? 1:0;
-        mvd_sign_flag_x = mvd_sign_flag_x^(ff_get_key (&s->HEVClc->dbs_g, 1));
-        lc->pu.mvd.x = mvd_sign_flag_x == 1 ? -abs(lc->pu.mvd.x) : abs(lc->pu.mvd.x);
-      }
-    }
-#endif
+
     switch (y) {
         case 2: lc->pu.mvd.y = mvd_decode(s);           break;
         case 1: lc->pu.mvd.y = mvd_sign_flag_decode(s); break;
         case 0: lc->pu.mvd.y = 0;                       break;
     }
-#if 0
-    if(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MV_SIGNS)) {
-      if(y==2) {
-        mvd_sign_flag_y = lc->pu.mvd.y < 0 ? 1:0;
-        mvd_sign_flag_y = mvd_sign_flag_y^(ff_get_key (&s->HEVClc->dbs_g, 1));
-        lc->pu.mvd.y = mvd_sign_flag_y == 1 ? -abs(lc->pu.mvd.y) : abs(lc->pu.mvd.y);
-      }
-    }
-#endif
+
 }
 
 
