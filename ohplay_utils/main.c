@@ -319,6 +319,19 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                 //printf("avpacket internal offset = %d\n",packet[0].)
                 /* Output and display handling
 			 * */
+
+                /* Write output file if any
+				 * */
+                if (fout && packet[0].data!=NULL)
+                {
+                    //int format = openHevcFrameCpy.frameInfo.chromat_format == YUV420 ? 1 : 0;
+                    //libOpenHevcGetOutputCpy(openHevcHandle, 1, &openHevcFrameCpy);
+                    fwrite(packet[0].data, packet[0].size, 1, fout);
+#if VERBOSE
+                    printf("writing %d bytes in fout\n", packet[0].size);
+#endif
+                }
+
                 if (got_picture > 0)
                 {
                     fflush(stdout);
@@ -350,17 +363,7 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                                            (uint8_t *)openHevcFrame.pvY, (uint8_t *)openHevcFrame.pvU, (uint8_t *)openHevcFrame.pvV);
                     }
 
-                    /* Write output file if any
-				 * */
-                    if (fout)
-                    {
-                        //int format = openHevcFrameCpy.frameInfo.chromat_format == YUV420 ? 1 : 0;
-                        //libOpenHevcGetOutputCpy(openHevcHandle, 1, &openHevcFrameCpy);
-                        fwrite(packet[0].data, packet[0].size, 1, fout);
-#if VERBOSE
-                        printf("writing %d bytes in fout\n",packet[0].size);
-#endif
-                    }
+                    
                     nbFrame++;
 
                     if (nbFrame == num_frames) // we already decoded all the frames we wanted to
@@ -375,6 +378,9 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                 {
                     stop = 1;
                 }
+                #if VERBOSE
+                printf("unref_packet\n");
+                #endif
                 av_packet_unref(&packet[0]);
                 if (split_layers)
                     av_packet_unref(&packet[1]);

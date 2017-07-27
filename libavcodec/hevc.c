@@ -4572,7 +4572,7 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
     lc->ccc.stream = &lc->stream;
     kvz_bitstream_init(lc->ccc.stream);
     #if VERBOSE
-        printf("init bitstream done\n");
+        printf("init buffer\n");
     #endif
 #endif
 
@@ -4878,19 +4878,19 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
                 packet_buffer = av_realloc(packet_buffer, packet_length + len_chuck);
             memcpy(packet_buffer + packet_length, data_out->data, len_chuck);
             packet_length += len_chuck;
-    #if VERBOSE
-            /*int m;
-            for (m = 0; m < len_chuck; m++)
-            {
-                printf("%02x ", data_out->data[m]);
-            }
-            printf("\n");*/
-    #endif
+    
             written += len_chuck;
             data_out = data_out->next;
         }
     #if VERBOSE
-        printf("saving done\n");
+        /*int m;
+        printf("buffer :\n");
+        for (m = 0; m < packet_length; m++)
+        {
+            printf("%02x ", packet_buffer[m]);
+        }
+        printf("\n");
+        printf("saving done\n");*/
     #endif 
 
 #endif // HEVC_CIPHERING 
@@ -5124,9 +5124,20 @@ static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
       }
       s->last_frame_pts = avpkt->pts;
     }
+#if VERBOSE
+    printf("decode_nal_units 3\n");
+#endif
     ret    = decode_nal_units(s, &data_buffer, &data_buffer_size);
     if (ret < 0)
         return ret;
+#if VERBOSE
+    /*int m;
+    printf("data received\n");
+    for (m = 0; m < data_buffer_size;m++){
+        printf("%02x ", data_buffer[m]);
+    }
+    printf("\n");*/
+#endif
 
     int grow_pkt_size = data_buffer_size - avpkt->size;
     if(grow_pkt_size>0){
