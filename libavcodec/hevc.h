@@ -1604,8 +1604,14 @@ typedef struct HEVCContext {
 	//int64_t last_frame_pts;
     int BL_width;
     int BL_height;
+
 #if HEVC_ENCRYPTION
     uint8_t encrypt_params;
+#endif
+#if HEVC_CIPHERING
+    uint8_t ciphering_params;
+#endif
+#if HEVC_ENCRYPTION
     uint8_t *encrypt_init_val;
     int encrypt_init_val_length;
     AVRational last_click_pos;

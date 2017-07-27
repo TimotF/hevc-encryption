@@ -4542,7 +4542,6 @@ nsc:
 static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
 {
     HEVCLocalContext *lc = s->HEVClc;
-
     int i,  consumed, ret = 0;
     int nb_start_bytes = 0;
     int skipped_bytes = 0;
@@ -5459,9 +5458,12 @@ static int hevc_update_thread_context(AVCodecContext *dst,
     s->field_order          = s0->field_order;
     s->picture_struct       = s0->picture_struct;
     s->interlaced           = s0->interlaced;
+
+#if HEVC_CIPHERING
+    s->ciphering_params = s0->ciphering_params;
+#endif
 #if HEVC_ENCRYPTION
     s->encrypt_params        = s0->encrypt_params;
-
     if (s0->prev_num_tile_columns != s->prev_num_tile_columns || s0->prev_num_tile_rows != s->prev_num_tile_rows){
         if(s->tile_table_encry )
             av_freep(s->tile_table_encry);
@@ -5584,6 +5586,8 @@ static const AVOption options[] = {
     { "mouse-click-pos", "select tile from last click position and enable/disable encryption",OFFSET(last_click_pos),
        AV_OPT_TYPE_RATIONAL,{.dbl = 0},0,INT_MAX,PAR },
     { "crypto-param", "",OFFSET(encrypt_params),
+       AV_OPT_TYPE_INT,{.i64 = 0},0,32,PAR },
+    { "cipher-param", "",OFFSET(ciphering_params),
        AV_OPT_TYPE_INT,{.i64 = 0},0,32,PAR },
     { "crypto-key", "",OFFSET(encrypt_init_val),
        AV_OPT_TYPE_BINARY },

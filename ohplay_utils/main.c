@@ -55,6 +55,7 @@ static int quality_layer_id;
 static int num_frames;
 static float frame_rate;
 static int crypto_args;
+static int cipher_args;
 static uint8_t *crypto_key = NULL;
 
 static const OptionDef options[] = {
@@ -74,6 +75,7 @@ static const OptionDef options[] = {
     { "e", HAS_ARG | OPT_STRING, { &enhance_file }, "Enhanced layer file (with AVC base)", "file" },
     {"-crypto", HAS_ARG | OPT_ENUM, {&crypto_args}, " Encryption configuration","params"},
     {"-key", HAS_ARG | OPT_DATA, {&crypto_key},"overload default cipher key", "(16 bytes)"},
+    {"-cipher", HAS_ARG | OPT_ENUM, {&cipher_args},"ciphering configuration", "params"},
     { NULL, },
 };
 
@@ -257,7 +259,8 @@ static void video_decode_example(const char *filename,const char *enh_filename)
 
     libOpenHevcSetDebugMode(openHevcHandle, OHEVC_LOG_INFO);
     libOpenHevcStartDecoder(openHevcHandle);
-    oh_set_crypto_mode(openHevcHandle,crypto_args);
+    oh_set_crypto_mode(openHevcHandle, crypto_args);
+    oh_set_cipher_mode(openHevcHandle, cipher_args);
     if(crypto_key!=NULL)
         oh_set_crypto_key(openHevcHandle, crypto_key);
 

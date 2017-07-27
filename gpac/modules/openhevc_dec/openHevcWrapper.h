@@ -245,6 +245,7 @@ void libOpenHevcFlushSVC(OpenHevc_Handle openHevcHandle, int decoderId);
 
 void oh_set_crypto_mode(OpenHevc_Handle openHevcHandle, int val);
 void oh_set_crypto_key(OpenHevc_Handle openHevcHandle, uint8_t *val);
+void oh_set_cipher_mode(OpenHevc_Handle openHevcHandle, int val);
 
 const char *libOpenHevcVersion(OpenHevc_Handle openHevcHandle);
 
