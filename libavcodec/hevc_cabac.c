@@ -1972,8 +1972,9 @@ static av_always_inline int coeff_sign_flag_decode(HEVCContext *s, uint8_t nb)
         ret = (ret << 1) | get_cabac_bypass(&s->HEVClc->cc);
 
 #if HEVC_ENCRYPTION
-    if(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_TRANSF_COEFF_SIGNS))
-      ret = ret^ff_get_key (&s->HEVClc->dbs_g, nb);
+    if((s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_TRANSF_COEFF_SIGNS))
+    ^ (s->tile_table_encry[s->HEVClc->tile_id] && (s->ciphering_params & HEVC_CRYPTO_TRANSF_COEFF_SIGNS)))
+        ret = ret^ff_get_key (&s->HEVClc->dbs_g, nb);
 #endif
 #if HEVC_CIPHERING 
     CABAC_BINS_EP(cabac, ret, nb, "coeff_sign_flag");
