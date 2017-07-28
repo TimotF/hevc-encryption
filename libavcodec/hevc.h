@@ -1390,6 +1390,9 @@ typedef struct HEVCLocalContext {
 #if HEVC_ENCRYPTION
     Crypto_Handle       dbs_g;
     uint32_t prev_pos;
+#if HEVC_CIPHERING
+    uint32_t ciphering_prev_pos;
+#endif
 #endif
     int ct_depth;
     CodingUnit cu;

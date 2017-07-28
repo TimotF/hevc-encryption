@@ -1417,69 +1417,18 @@ static av_always_inline int mvd_sign_flag_decode(HEVCContext *s)
 
     return bin;
 }
-#if HEVC_ENCRYPTION
-static av_always_inline int mvd_decode_enc(HEVCContext *s)
-{
-    int ret = 2, ret0 = 0, sign;
-    int k = 1, k0;
-    unsigned int key;
-    int bin = 1;
-#if HEVC_CIPHERING 
-    HEVCLocalContext *lc = s->HEVClc;
-    cabac_data_t *const cabac = &lc->ccc;
-#endif
 
-    while (k < CABAC_MAX_BIN && bin) {
-        bin = get_cabac_bypass(&s->HEVClc->cc);
-#if HEVC_CIPHERING 
-    CABAC_BIN_EP(cabac, bin, "mvd");
-#endif
-        if(bin){
-            ret += 1 << k;
-            k++;
-        }
-    }
-    k0 = k;
-    if (k == CABAC_MAX_BIN)
-        av_log(s->avctx, AV_LOG_ERROR, "CABAC_MAX_BIN : %d\n", k);
-    key = ff_get_key (&s->HEVClc->dbs_g, k);
-    while (k--) {
-        unsigned int e = get_cabac_bypass(&s->HEVClc->cc);
-        ret0 += e << k;
-    }
-    s->HEVClc->prev_pos = ret0 - (s->HEVClc->prev_pos^key);
-    s->HEVClc->prev_pos &=  ((1 << k0) - 1);
-    ret += s->HEVClc->prev_pos;
-
-#if HEVC_CIPHERING 
-    k = k0;
-    while (k--){
-        CABAC_BIN_EP(cabac, (ret & (0x01 << k)) > 0, "mvd");
-    }
-#endif
-
-    
-    s->HEVClc->prev_pos = ret0;
-    sign = mvd_sign_flag_decode(s);
-    ret = sign == -1 ? -ret : ret;
-
-    return ret;
-}
-#endif
 static av_always_inline int mvd_decode(HEVCContext *s)
 {
-    int ret = 2;
-    int k = 1;
+    int ret = 2, ret0 = 0;
+    int k = 1, k0;
     int bin = 1;
+    unsigned int key = 0;
 #if HEVC_CIPHERING 
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
 #endif
 
-#if HEVC_ENCRYPTION
-    if( s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MVs))
-      return mvd_decode_enc (s);
-#endif
     while (k < CABAC_MAX_BIN && bin) {
         bin = get_cabac_bypass(&s->HEVClc->cc);
 #if HEVC_CIPHERING 
@@ -1494,38 +1443,39 @@ static av_always_inline int mvd_decode(HEVCContext *s)
         av_log(s->avctx, AV_LOG_ERROR, "CABAC_MAX_BIN : %d\n", k);
         return 0;
     }
-    int k0 = k;
-    while (k--){
-        bin = get_cabac_bypass(&s->HEVClc->cc);
-// #if HEVC_CIPHERING 
-//         CABAC_BIN_EP(cabac, bin, "mvd");
-// #endif
-        ret += bin << k;
-    }
-#if HEVC_CIPHERING 
-    k = k0;
-    while (k--){
-        CABAC_BIN_EP(cabac, (ret & (0x01 << k)) > 0, "mvd");
-    }
+    k0 = k;
+#if HEVC_CIPHERING || HEVC_ENCRYPTION
+    if ((s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MVs)) 
+    || (s->tile_table_encry[s->HEVClc->tile_id] && (s->ciphering_params & HEVC_CRYPTO_MVs)))
+        key = ff_get_key(&s->HEVClc->dbs_g, k0);
 #endif
-    bin = get_cabac_bypass_sign(&s->HEVClc->cc, -ret);
+
+    while (k--)
+        ret0 += get_cabac_bypass(&s->HEVClc->cc) << k;
+
+
 
 #if HEVC_ENCRYPTION
-
-    unsigned int sign_flag;
-    if ((s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MV_SIGNS)) 
-    ^ (s->tile_table_encry[s->HEVClc->tile_id] && (s->ciphering_params & HEVC_CRYPTO_MV_SIGNS)))
-    {
-        sign_flag = bin < 0 ? 1 : 0;
-        sign_flag = sign_flag ^ (ff_get_key(&s->HEVClc->dbs_g, 1));
-        bin = sign_flag == 1 ? -abs(bin) : abs(bin);
+    if (s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_MVs)){
+        int enc_ret = ret0 - (s->HEVClc->prev_pos ^ key);
+        enc_ret &= ((1 << k0) - 1);
+        s->HEVClc->prev_pos = ret0;
+        ret0 = enc_ret;
     }
 #endif
 
-#if HEVC_CIPHERING 
-    uint32_t mvd_sign = (bin > 0) ? 0 : 1;
-    CABAC_BIN_EP(cabac, mvd_sign, "mvd_sign");
+#if HEVC_CIPHERING
+    if( s->tile_table_encry[s->HEVClc->tile_id] && (s->ciphering_params & HEVC_CRYPTO_MVs)){
+        s->HEVClc->ciphering_prev_pos = ret0 + (s->HEVClc->ciphering_prev_pos ^ key);
+        s->HEVClc->ciphering_prev_pos &= ((1 << k0) - 1);
+        ret0 = s->HEVClc->ciphering_prev_pos;
+    } 
+    CABAC_BINS_EP(cabac, ret0, k0, "mvd");
 #endif
+    ret += ret0;
+    bin = mvd_sign_flag_decode(s);
+    bin = bin == -1 ? -ret : ret;
+
     return bin;
 }
 

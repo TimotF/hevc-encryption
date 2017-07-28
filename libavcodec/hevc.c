@@ -3801,6 +3801,7 @@ static int hls_slice_data(HEVCContext *s, const uint8_t *nal, int length)
 #if HEVC_ENCRYPTION
     InitC(s->HEVClc->dbs_g, s->encrypt_init_val);
     s->HEVClc->prev_pos = 0;
+    s->HEVClc->ciphering_prev_pos = 0;
 #endif
     s->data = nal;
     if (s->sh.first_slice_in_pic_flag){
@@ -3817,6 +3818,7 @@ static int hls_slice_data(HEVCContext *s, const uint8_t *nal, int length)
 #if HEVC_ENCRYPTION
         InitC(s->sList[i]->HEVClc->dbs_g, s->encrypt_init_val);
         s->sList[i]->HEVClc->prev_pos = 0;
+        s->sList[i]->HEVClc->ciphering_prev_pos = 0;
 #endif
     }
 
@@ -5307,6 +5309,7 @@ static av_cold int hevc_init_context(AVCodecContext *avctx)
 #if HEVC_ENCRYPTION
     s->HEVClc->dbs_g = CreateC();
     s->HEVClc->prev_pos = 0;
+    s->HEVClc->ciphering_prev_pos = 0;
 #endif
 
 #if !ACTIVE_PU_UPSAMPLING
@@ -5365,6 +5368,7 @@ static av_cold int hevc_init_context(AVCodecContext *avctx)
 #if HEVC_ENCRYPTION
         s->HEVClcList[i]->dbs_g = CreateC();
         s->HEVClcList[i]->prev_pos = 0;
+        s->HEVClcList[i]->ciphering_prev_pos = 0;
 #endif
         s->sList[i]->HEVClc = s->HEVClcList[i];
     }
