@@ -1903,6 +1903,7 @@ static av_always_inline int coeff_abs_level_remaining_decode_enc(HEVCContext *s,
     return last_coeff_abs_level_remaining;
 }
 #endif
+
 static av_always_inline int coeff_abs_level_greater2_flag_decode(HEVCContext *s, int c_idx, int inc)
 {
     if (c_idx > 0)
@@ -1959,6 +1960,245 @@ static av_always_inline int coeff_abs_level_remaining_decode(HEVCContext *s, int
     return last_coeff_abs_level_remaining;
 }
 
+#if HEVC_CIPHERING
+static av_always_inline int coeff_abs_level_remaining_decode_ciph(HEVCContext *s, int rc_rice_param, int base)
+{
+    int prefix = 0;
+    int suffix = 0;
+    int last_coeff_abs_level_remaining;
+    int i;
+    unsigned int key;
+    int bin = 1;
+    HEVCLocalContext *lc = s->HEVClc;
+    cabac_data_t *const cabac = &lc->ccc;
+
+    while (prefix < CABAC_MAX_BIN && bin)
+    {
+        bin = get_cabac_bypass(&s->HEVClc->cc);
+        CABAC_BIN_EP(cabac, bin, "coeff_abs_level_remaining");
+
+        if (bin)
+            prefix++;
+    }
+    if (prefix == CABAC_MAX_BIN)
+        av_log(s->avctx, AV_LOG_ERROR, "CABAC_MAX_BIN : %d\n", prefix);
+    if (prefix < 3)
+    {
+        for (i = 0; i < rc_rice_param; i++)
+        {
+            suffix = (suffix << 1) | get_cabac_bypass(&s->HEVClc->cc);
+        }
+        unsigned int codeNumber = (prefix << (rc_rice_param)) + suffix;
+        unsigned int res = suffix;
+        if (rc_rice_param == 1)
+        {
+            if (!((base == 2) && (codeNumber == 4 || codeNumber == 5)))
+            {
+                key = ff_get_key(&s->HEVClc->dbs_g, 1);
+                suffix = (((s->HEVClc->ciphering_prev_pos ^ key) & 1) ^ suffix);
+                codeNumber = (prefix << (rc_rice_param)) + suffix;
+                s->HEVClc->ciphering_prev_pos = suffix;
+            }
+        }
+        else if (rc_rice_param == 2)
+        {
+            if (base == 1)
+            {
+                key = ff_get_key(&s->HEVClc->dbs_g, 2);
+                suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 3)) & 3;
+                codeNumber = (prefix << (2)) + suffix;
+                s->HEVClc->ciphering_prev_pos = suffix;
+            }
+            else if (base == 2)
+            {
+                if (codeNumber <= 7 || codeNumber >= 12)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 2);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 3)) & 3;
+                    codeNumber = (prefix << (2)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber < 10)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 1);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 1)) & 1;
+                    codeNumber = (prefix << (2)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+            }
+            else
+            { //base=3
+                if (codeNumber <= 7 || codeNumber > 11)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 2);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 3)) & 3;
+                    codeNumber = (prefix << (2)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 1);
+                    suffix = (suffix & 2) + (((s->HEVClc->ciphering_prev_pos ^ key) & 1) ^ (suffix & 1));
+                    codeNumber = (prefix << (2)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+            }
+        }
+        else if (rc_rice_param == 3)
+        {
+            if (base == 1)
+            {
+                key = ff_get_key(&s->HEVClc->dbs_g, 3);
+                suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 7)) & 7;
+                codeNumber = (prefix << (3)) + suffix;
+                s->HEVClc->ciphering_prev_pos = suffix;
+            }
+            else if (base == 2)
+            {
+                if (codeNumber <= 15 || codeNumber > 23)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 3);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 7)) & 7;
+                    codeNumber = (prefix << (3)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 19)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 2);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 3)) & 3;
+                    codeNumber = (prefix << (3)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 21)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 1);
+                    suffix = 4 + (((s->HEVClc->ciphering_prev_pos ^ key) & 1) ^ (suffix & 1));
+                    codeNumber = (prefix << (rc_rice_param)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+            }
+            else
+            { //base=3
+                if (codeNumber <= 15 || codeNumber > 23)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 3);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 7)) & 7;
+                    codeNumber = (prefix << (3)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 19)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 2);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 3)) & 3;
+                    codeNumber = (prefix << (3)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 23)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 1);
+                    suffix = (suffix & 6) + (((s->HEVClc->ciphering_prev_pos ^ key) & 1) ^ (suffix & 1));
+                    codeNumber = (prefix << (rc_rice_param)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+            }
+        }
+        else if (rc_rice_param == 4)
+        {
+            if (base == 1)
+            {
+                key = ff_get_key(&s->HEVClc->dbs_g, 4);
+                suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 15)) & 15;
+                codeNumber = (prefix << (4)) + suffix;
+                s->HEVClc->ciphering_prev_pos = suffix;
+            }
+            else if (base == 2)
+            {
+                if (codeNumber <= 31 || codeNumber > 47)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 4);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 15)) & 15;
+                    codeNumber = (prefix << (4)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 39)
+                {
+
+                    key = ff_get_key(&s->HEVClc->dbs_g, 3);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 7)) & 7;
+                    codeNumber = (prefix << (4)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 43)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 2);
+                    suffix = 8 + (((suffix & 3) + ((s->HEVClc->ciphering_prev_pos ^ key) & 3)) & 3);
+                    codeNumber = (prefix << (4)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 45)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 1);
+                    suffix = 12 + ((suffix & 1) ^ ((s->HEVClc->ciphering_prev_pos ^ key) & 1));
+                    codeNumber = (prefix << (4)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+            }
+            else
+            { //base=3
+                if (codeNumber <= 31 || codeNumber > 47)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 4);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 15)) & 15;
+                    codeNumber = (prefix << (4)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 39)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 3);
+                    suffix = (suffix + ((s->HEVClc->ciphering_prev_pos ^ key) & 7)) & 7;
+                    codeNumber = (prefix << (4)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 43)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 2);
+                    suffix = 8 + (((suffix & 3) + ((s->HEVClc->ciphering_prev_pos ^ key) & 3)) & 3);
+                    codeNumber = (prefix << (4)) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+                else if (codeNumber <= 47)
+                {
+                    key = ff_get_key(&s->HEVClc->dbs_g, 1);
+                    suffix = (suffix & 14) + ((suffix & 1) ^ ((s->HEVClc->ciphering_prev_pos ^ key) & 1));
+                    codeNumber = (prefix << 4) + suffix;
+                    s->HEVClc->ciphering_prev_pos = suffix;
+                }
+            }
+        }
+
+        CABAC_BINS_EP(cabac, suffix, rc_rice_param, "coeff_abs_level_remaining");
+
+        last_coeff_abs_level_remaining = codeNumber;
+    }
+    else
+    { // EG code does not change
+        int prefix_minus3 = prefix - 3;
+        for (i = 0; i < prefix_minus3 + rc_rice_param; i++)
+            suffix = (suffix << 1) | get_cabac_bypass(&s->HEVClc->cc);
+        key = ff_get_key(&s->HEVClc->dbs_g, prefix_minus3 + rc_rice_param);
+        s->HEVClc->ciphering_prev_pos = suffix + (s->HEVClc->ciphering_prev_pos ^ key);
+        s->HEVClc->ciphering_prev_pos = (s->HEVClc->ciphering_prev_pos & ((1 << (prefix_minus3 + rc_rice_param)) - 1));
+        suffix = s->HEVClc->ciphering_prev_pos;
+        
+        CABAC_BINS_EP(cabac, suffix, prefix_minus3 + rc_rice_param, "coeff_abs_level_remaining");
+
+        last_coeff_abs_level_remaining = (((1 << prefix_minus3) + 3 - 1)
+                                          << rc_rice_param) +
+                                         suffix;
+    }
+    return last_coeff_abs_level_remaining;
+}
+#endif
 static av_always_inline int coeff_sign_flag_decode(HEVCContext *s, uint8_t nb)
 {
     int i;
@@ -2382,8 +2622,16 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
                     if (trans_coeff_level == ((m == first_greater1_coeff_idx) ? 3 : 2)) {
                         int last_coeff_abs_level_remaining;
 #if HEVC_ENCRYPTION
-                        if(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_TRANSF_COEFFS))
+                        if(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_TRANSF_COEFFS)){
                             last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode_enc(s, c_rice_param, trans_coeff_level);
+                        }
+                        else
+#endif
+#if HEVC_CIPHERING
+                            if (s->tile_table_encry[s->HEVClc->tile_id] && (s->ciphering_params & HEVC_CRYPTO_TRANSF_COEFFS))
+                        {
+                            last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode_ciph(s, c_rice_param, trans_coeff_level);
+                        }
                         else
 #endif
                             last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode(s, c_rice_param);
@@ -2405,8 +2653,17 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
                 } else {
                     int last_coeff_abs_level_remaining;
 #if HEVC_ENCRYPTION
-                    if(s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_TRANSF_COEFFS))
-                        last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode_enc(s, c_rice_param, 1);
+                    if (s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_TRANSF_COEFFS))
+                    {
+                        last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode_enc(s, c_rice_param, trans_coeff_level);
+                    }
+                    else
+#endif
+#if HEVC_CIPHERING
+                        if (s->tile_table_encry[s->HEVClc->tile_id] && (s->ciphering_params & HEVC_CRYPTO_TRANSF_COEFFS))
+                    {
+                        last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode_ciph(s, c_rice_param, trans_coeff_level);
+                    }
                     else
 #endif
                         last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode(s, c_rice_param);
