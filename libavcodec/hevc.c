@@ -213,12 +213,6 @@ fail:
     return AVERROR(ENOMEM);
 }
 
-// static void printBitContext(GetBitContext *gb){
-//     int index;
-//     for(index = 0; index<(gb->index); index++){
-//         printf("%02x ",gb->buffer[index]);
-//     }
-// }
 
 static void pred_weight_table(HEVCContext *s, GetBitContext *gb)
 {
@@ -702,9 +696,6 @@ int set_el_parameter(HEVCContext *s) {
 
 static int hls_slice_header(HEVCContext *s)
 {
-#if VERBOSE
-    printf("hls_slice_header\n");
-#endif
     GetBitContext *gb = &s->HEVClc->gb;
     SliceHeader *sh   = &s->sh;
 //#if PARALLEL_SLICE
@@ -1004,7 +995,6 @@ else
             print_cabac("short_term_ref_pic_set_sps_flag", sh->short_term_ref_pic_set_sps_flag);
             if (!sh->short_term_ref_pic_set_sps_flag) {
 #if HEVC_CIPHERING 
-                // TODO : use the same function to avoid code duplication
                 ret = ff_hevc_decode_short_term_rps_decrypt(stream, gb, s->avctx, &sh->slice_rps, s->ps.sps, 1);
 #else
                 ret = ff_hevc_decode_short_term_rps(gb, s->avctx, &sh->slice_rps, s->ps.sps, 1);
@@ -1569,9 +1559,6 @@ do {                                                    \
 
 static void hls_sao_param(HEVCContext *s, int rx, int ry)
 {
-#if VERBOSE
-    printf("hls_sao_param\n");
-#endif
     HEVCLocalContext *lc    = s->HEVClc;
 #if HEVC_CIPHERING 
     cabac_data_t *const cabac = &lc->ccc;
@@ -2764,7 +2751,6 @@ static int luma_intra_pred_mode(HEVCContext *s, int x0, int y0, int pu_size,
         size_in_pus = 1;
 
 #if HEVC_ENCRYPTION
-    int dec_mode_saved =  intra_pred_mode;    //TODEL
     if( s->tile_table_encry[s->HEVClc->tile_id]  && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)) {
 	    if(intra_pred_mode != INTRA_ANGULAR_26 && intra_pred_mode != INTRA_ANGULAR_10) {/* for correct chroma Inra prediction mode */
 
@@ -3263,9 +3249,6 @@ static int hls_coding_quadtree(HEVCContext *s, int x0, int y0,
 static void hls_decode_neighbour(HEVCContext *s, int x_ctb, int y_ctb,
                                  int ctb_addr_ts)
 {
-#if VERBOSE
-    printf("hls_decode_neighbour\n");
-#endif
     HEVCLocalContext *lc  = s->HEVClc;
     int ctb_size          = 1 << s->ps.sps->log2_ctb_size;
     int ctb_addr_rs       = s->ps.pps->ctb_addr_ts_to_rs[ctb_addr_ts];
@@ -3336,9 +3319,6 @@ static int hls_decode_entry(AVCodecContext *avctxt, void *isFilterThread)
     }
 
     while (more_data && ctb_addr_ts < s->ps.sps->ctb_size) {
-#if CABAC_VERBOSE
-        printf("loop %d\n",i++);
-#endif
         int ctb_addr_rs = s->ps.pps->ctb_addr_ts_to_rs[ctb_addr_ts];
         s->HEVClc->tile_id = s->ps.pps->tile_id[ctb_addr_ts];
 
@@ -3370,9 +3350,6 @@ static int hls_decode_entry(AVCodecContext *avctxt, void *isFilterThread)
     HEVCLocalContext *lc = s->HEVClc;
     cabac_data_t *const cabac = &lc->ccc;
     kvz_cabac_finish(cabac);
-#if VERBOSE
-    printf("end of bitstream, saving trailing bits\n");
-#endif
     kvz_bitstream_add_rbsp_trailing_bits(cabac->stream);
 #endif
 
@@ -4240,22 +4217,14 @@ fail:
 
 static int decode_nal_unit(HEVCContext *s, const uint8_t *nal, int length)
 {
-#if VERBOSE
-    printf("decode_nal_unit\n");
-#endif
     HEVCLocalContext *lc = s->HEVClc;
     GetBitContext *gb    = &lc->gb;
     int ctb_addr_ts, ret;
 
 #if HEVC_CIPHERING 
     cabac_data_t *const cabac = &lc->ccc;
-#if VERBOSE
-    printf("clear bitstream\n");
-#endif
     kvz_bitstream_clear(cabac->stream);
-
 #endif
-
 
     ret = init_get_bits8(gb, nal, length);
     if (ret < 0)
@@ -4628,14 +4597,8 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
 
     uint8_t **nal_start_code = NULL;
     uint8_t *size_start_code = NULL;
-    #if VERBOSE
-        printf("init bitstream\n");
-    #endif
     lc->ccc.stream = &lc->stream;
     kvz_bitstream_init(lc->ccc.stream);
-    #if VERBOSE
-        printf("init buffer\n");
-    #endif
 #endif
 
 
@@ -4911,15 +4874,6 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         }
 #if HEVC_CIPHERING 
         if(size_start_code){
-    #if VERBOSE
-        printf("saving start_nal_code in buffer\n");
-            printf("------------start_code-----------\n");
-            int indx;
-            for (indx = 0; indx < size_start_code[i];indx++){
-                printf("%02x ", nal_start_code[i][indx]);
-            }
-            printf("\n----------------------------------\n");
-    #endif
             if (*data_length < packet_length + size_start_code[i])
                 packet_buffer = av_realloc(packet_buffer, packet_length + size_start_code[i]);
             memcpy(packet_buffer + packet_length, nal_start_code[i], size_start_code[i]);
@@ -4927,9 +4881,6 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         }
 
         int len_out = kvz_bitstream_tell(lc->ccc.stream) / 8;
-    #if VERBOSE
-        printf("saving nal in buffer (%d bits)\n", kvz_bitstream_tell(lc->ccc.stream));
-    #endif
         
         uint64_t written = 0;
         kvz_data_chunk *data_out = kvz_bitstream_take_chunks(lc->ccc.stream);
@@ -4944,16 +4895,6 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
             written += len_chuck;
             data_out = data_out->next;
         }
-    #if VERBOSE
-        /*int m;
-        printf("buffer :\n");
-        for (m = 0; m < packet_length; m++)
-        {
-            printf("%02x ", packet_buffer[m]);
-        }
-        printf("\n");
-        printf("saving done\n");*/
-    #endif 
 
 #endif // HEVC_CIPHERING 
     }
@@ -5112,7 +5053,7 @@ static int hevc_decode_extradata(HEVCContext *s)
                     return AVERROR_INVALIDDATA;
                 }
 
-                ret = decode_nal_units(s, &(gb.buffer), &nalsize);
+                ret = decode_nal_units(s, (uint8_t**)&(gb.buffer), &nalsize);
                 if (ret < 0) {
                     av_log(avctx, AV_LOG_ERROR,
                            "Decoding nal unit %d %d from hvcC failed\n",
@@ -5186,20 +5127,10 @@ static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
       }
       s->last_frame_pts = avpkt->pts;
     }
-#if VERBOSE
-    printf("decode_nal_units 3\n");
-#endif
+
     ret    = decode_nal_units(s, &data_buffer, &data_buffer_size);
     if (ret < 0)
         return ret;
-#if VERBOSE
-    /*int m;
-    printf("data received\n");
-    for (m = 0; m < data_buffer_size;m++){
-        printf("%02x ", data_buffer[m]);
-    }
-    printf("\n");*/
-#endif
 
     int grow_pkt_size = data_buffer_size - avpkt->size;
     if(grow_pkt_size>0){

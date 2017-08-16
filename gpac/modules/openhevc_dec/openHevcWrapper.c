@@ -247,14 +247,12 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size,
         openHevcContext->c->quality_id = openHevcContexts->active_layer;
 
         if (i <= openHevcContexts->active_layer) {
-            // note : cannot set avpkt.data to another address manualy
+            // NB : cannot set avpkt.data to another address manualy
             if(openHevcContext->avpkt.size<au_len){
                 av_grow_packet(&openHevcContext->avpkt, au_len - openHevcContext->avpkt.size);
             }
             memcpy(openHevcContext->avpkt.data, *buff, au_len);
             av_shrink_packet(&openHevcContext->avpkt, au_len);
-            //     openHevcContext->avpkt.size = au_len;
-            // openHevcContext->avpkt.data = *buff;
         } else {
             openHevcContext->avpkt.size = 0;
             openHevcContext->avpkt.data = NULL;
@@ -270,20 +268,6 @@ int libOpenHevcDecode(OpenHevc_Handle openHevcHandle, uint8_t **buff, int *size,
 
 #if HEVC_CIPHERING
         if(openHevcContext->avpkt.size){
-#if VERBOSE
-/*
-            printf("\n-----openHevcWrapper-----\n");
-            printf("address of the original buffer : %p (size = %d)\n", *buff, *size);
-            printf("new address for the data : %p (size = %d)\n", openHevcContext->avpkt.data, openHevcContext->avpkt.size);
-            printf("length = %d \n",decoded_length);
-            for(i=0;i<decoded_length;i++){
-                printf("%02x ",*(openHevcContext->avpkt.data+i));
-            }
-            printf("\n");
-            //printf("size : %d; %d\n",*size,openHevcContext->avpkt.size);
-            //printf("data : %p; %p\n",*buff,openHevcContext->avpkt.data);
-            printf("---------------------------\n");*/
-#endif
             if(size != NULL)
                 *size = decoded_length;
             if(buff!=NULL)

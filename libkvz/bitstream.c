@@ -135,9 +135,6 @@ uint64_t kvz_bitstream_tell(const bitstream_t *const stream)
 void kvz_bitstream_writebyte(bitstream_t *const stream, const uint8_t byte)
 {
   assert(stream->cur_bit == 0);
-#ifdef CABAC_VERBOSE
-  printf("%02x\n", byte);
-#endif
   if (stream->last == NULL || stream->last->len == KVZ_DATA_CHUNK_SIZE) {
     // Need to allocate a new chunk.
     kvz_data_chunk *new_chunk = kvz_bitstream_alloc_chunk();

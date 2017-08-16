@@ -306,9 +306,7 @@ static void video_decode_example(const char *filename,const char *enh_filename)
 	    if (stop_dec == 0 && av_read_frame(pFormatCtx[0], &packet[0])<0)
 	        stop_dec = 1;
 
-        int i;
-        // for (i = 0; i < packet[0].size;i++)
-        //     printf("%02x ", packet[0].data[i]);
+        // TODEL int i;
 
             if ((packet[0].stream_index == video_stream_idx && (!split_layers || packet[1].stream_index == video_stream_idx)) //
                 || stop_dec == 1 || stop_dec2 == 1)
@@ -319,7 +317,7 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                     got_picture = libOpenShvcDecode2(openHevcHandle, packet[0].data, packet[1].data, !stop_dec ? packet[0].size : 0, !stop_dec2 ? packet[1].size : 0, packet[0].pts, packet[1].pts);
                 else
                     got_picture = libOpenHevcDecode(openHevcHandle, &(packet[0].data), !stop_dec ? &(packet[0].size) : NULL, packet[0].pts);
-                //printf("avpacket internal offset = %d\n",packet[0].)
+                
                 /* Output and display handling
 			 * */
 
@@ -327,12 +325,7 @@ static void video_decode_example(const char *filename,const char *enh_filename)
 				 * */
                 if (fout && packet[0].data!=NULL)
                 {
-                    //int format = openHevcFrameCpy.frameInfo.chromat_format == YUV420 ? 1 : 0;
-                    //libOpenHevcGetOutputCpy(openHevcHandle, 1, &openHevcFrameCpy);
                     fwrite(packet[0].data, packet[0].size, 1, fout);
-#if VERBOSE
-                    printf("writing %d bytes in fout\n", packet[0].size);
-#endif
                 }
 
                 if (got_picture > 0)
@@ -381,9 +374,7 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                 {
                     stop = 1;
                 }
-                #if VERBOSE
-                printf("unref_packet\n");
-                #endif
+
                 av_packet_unref(&packet[0]);
                 if (split_layers)
                     av_packet_unref(&packet[1]);
@@ -396,24 +387,16 @@ static void video_decode_example(const char *filename,const char *enh_filename)
                     fprintf(stderr, "Error when reading first frame\n");
                     exit(1);
                 }
-#if VERBOSE
-                printf("packet done\n");
-#endif
+
             } // End of got_packet
     } //End of main loop
 
-#if VERBOSE
-    printf("file done\n");
-#endif
     time = oh_timer_getTimeMs()/1000.0;
     oh_display_close();
 
     if (fout) {
         fclose(fout);
     }
-#if VERBOSE
-    printf("closing file\n");
-#endif
     if(!split_layers)
         avformat_close_input(&pFormatCtx[0]);
     if(split_layers){
