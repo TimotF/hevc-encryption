@@ -4703,6 +4703,7 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         if (ret < 0)
             goto fail;
         ret = hls_nal_unit(s);
+
 #if HEVC_CIPHERING 
         int j,offset;
         if (!size_start_code){
@@ -4742,11 +4743,6 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
                     fprintf(stderr, "error while allocating nal_start_code[%d]\n",s->nb_nals-1);
                     exit(1);
                 }
-                /*
-                if(*data_length<packet_length+size)
-                    packet_buffer = av_realloc(packet_buffer,packet_length+size);
-                memcpy(packet_buffer+packet_length,initial_buf+offset,size);
-                packet_length += size;*/
                 memcpy(nal_start_code[s->nb_nals - 1], initial_buf + offset, size_start_code[s->nb_nals - 1]);
                 break;
             case NAL_TRAIL_N:
@@ -4884,6 +4880,7 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
         
         uint64_t written = 0;
         kvz_data_chunk *data_out = kvz_bitstream_take_chunks(lc->ccc.stream);
+        kvz_data_chunk *to_free = data_out;
         while(data_out!=NULL){
             int len_chuck = data_out->len;
             assert(written + len_chuck <= len_out);
@@ -4895,6 +4892,7 @@ static int decode_nal_units(HEVCContext *s, uint8_t **data, int *data_length)
             written += len_chuck;
             data_out = data_out->next;
         }
+        kvz_bitstream_free_chunks(to_free);
 
 #endif // HEVC_CIPHERING 
     }

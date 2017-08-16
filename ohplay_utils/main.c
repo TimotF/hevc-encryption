@@ -306,8 +306,6 @@ static void video_decode_example(const char *filename,const char *enh_filename)
 	    if (stop_dec == 0 && av_read_frame(pFormatCtx[0], &packet[0])<0)
 	        stop_dec = 1;
 
-        // TODEL int i;
-
             if ((packet[0].stream_index == video_stream_idx && (!split_layers || packet[1].stream_index == video_stream_idx)) //
                 || stop_dec == 1 || stop_dec2 == 1)
             {
