@@ -2655,14 +2655,14 @@ void ff_hevc_hls_residual_coding(HEVCContext *s, int x0, int y0,
 #if HEVC_ENCRYPTION
                     if (s->tile_table_encry[s->HEVClc->tile_id] && (s->encrypt_params & HEVC_CRYPTO_TRANSF_COEFFS))
                     {
-                        last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode_enc(s, c_rice_param, trans_coeff_level);
+                        last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode_enc(s, c_rice_param, 1);
                     }
                     else
 #endif
 #if HEVC_CIPHERING
                         if (s->tile_table_encry[s->HEVClc->tile_id] && (s->ciphering_params & HEVC_CRYPTO_TRANSF_COEFFS))
                     {
-                        last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode_ciph(s, c_rice_param, trans_coeff_level);
+                        last_coeff_abs_level_remaining = coeff_abs_level_remaining_decode_ciph(s, c_rice_param, 1);
                     }
                     else
 #endif
