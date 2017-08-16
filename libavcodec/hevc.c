@@ -2637,6 +2637,49 @@ static void hls_prediction_unit(HEVCContext *s, int x0, int y0,
     }
 }
 
+static INLINE uint8_t intra_mode_encryption(HEVCContext *s, uint8_t intra_pred_mode)
+{
+    const uint8_t sets[3][17] =
+    {
+        {  0,  1,  2,  3,  4,  5, 15, 16, 17, 18, 19, 20, 21, 31, 32, 33, 34},  /* 17 */
+        { 22, 23, 24, 25, 27, 28, 29, 30, -1, -1, -1, -1, -1, -1, -1, -1, -1},  /* 9  */
+        {  6,  7,  8,  9, 11, 12, 13, 14, -1, -1, -1, -1, -1, -1, -1, -1, -1}   /* 9  */
+    };
+
+    const uint8_t nb_elems[3] = {17, 8, 8};
+
+    if (intra_pred_mode == 26 || intra_pred_mode == 10) {
+    // correct chroma intra prediction mode
+        return intra_pred_mode;
+
+    } else {
+        uint8_t keybits, scan_dir, elem_idx=0;
+
+        keybits = ff_get_key(&s->HEVClc->dbs_g, 5);
+
+        scan_dir = SCAN_DIA;
+        if (intra_pred_mode > 5  && intra_pred_mode < 15) {
+            scan_dir = SCAN_VER;
+        }
+        if (intra_pred_mode > 21 && intra_pred_mode < 31) {
+            scan_dir = SCAN_HOR;
+        }
+
+        for (int i = 0; i < nb_elems[scan_dir]; i++) {
+            if (intra_pred_mode == sets[scan_dir][i]) {
+                elem_idx = i;
+                break;
+            }
+        }
+
+        keybits = keybits % nb_elems[scan_dir];
+        keybits = (elem_idx + keybits) % nb_elems[scan_dir];
+
+        return sets[scan_dir][keybits];
+    }
+}
+
+
 /**
  * 8.4.1
  */
@@ -2721,6 +2764,7 @@ static int luma_intra_pred_mode(HEVCContext *s, int x0, int y0, int pu_size,
         size_in_pus = 1;
 
 #if HEVC_ENCRYPTION
+    int dec_mode_saved =  intra_pred_mode;    //TODEL
     if( s->tile_table_encry[s->HEVClc->tile_id]  && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)) {
 	    if(intra_pred_mode != INTRA_ANGULAR_26 && intra_pred_mode != INTRA_ANGULAR_10) {/* for correct chroma Inra prediction mode */
 
@@ -2755,8 +2799,18 @@ static int luma_intra_pred_mode(HEVCContext *s, int x0, int y0, int pu_size,
 #endif //HEVC_ENCRYPTION
 
 #if HEVC_CIPHERING 
-    cand_up = (lc->ctb_up_flag || y0b) ? s->tab_ipm[(y_pu - 1) * min_pu_width + x_pu] : INTRA_DC;
-    cand_left = (lc->ctb_left_flag || x0b) ? s->tab_ipm[y_pu * min_pu_width + x_pu - 1] : INTRA_DC;
+    int saved_intra_pred_mode = intra_pred_mode;
+    if( s->tile_table_encry[s->HEVClc->tile_id]  && (s->ciphering_params & HEVC_CRYPTO_INTRA_PRED_MODE)) {
+        intra_pred_mode = intra_mode_encryption(s, intra_pred_mode);
+        cand_up = (lc->ctb_up_flag || y0b) ? s->tab_ipm_encry[(y_pu - 1) * min_pu_width + x_pu] : INTRA_DC;
+        cand_left = (lc->ctb_left_flag || x0b) ? s->tab_ipm_encry[y_pu * min_pu_width + x_pu - 1] : INTRA_DC;
+        for (i = 0; i < size_in_pus; i++)
+            memset(&s->tab_ipm_encry[(y_pu + i) * min_pu_width + x_pu], intra_pred_mode, size_in_pus);
+    } else {
+        cand_up = (lc->ctb_up_flag || y0b) ? s->tab_ipm[(y_pu - 1) * min_pu_width + x_pu] : INTRA_DC;
+        cand_left = (lc->ctb_left_flag || x0b) ? s->tab_ipm[y_pu * min_pu_width + x_pu - 1] : INTRA_DC;
+    }
+
     // intra_pred_mode prediction does not cross vertical CTB boundaries
     if ((y0 - 1) < y_ctb)
         cand_up = INTRA_DC;
@@ -2804,8 +2858,8 @@ static int luma_intra_pred_mode(HEVCContext *s, int x0, int y0, int pu_size,
         *dst = mode;
     } 
     *prev_intra_luma_pred_flag = mode_found;
+    intra_pred_mode = saved_intra_pred_mode;
 
-    
 #endif  //HEVC_CIPHERING 
 
 
@@ -2942,6 +2996,13 @@ static void intra_prediction_unit_default_value(HEVCContext *s,
 
 #if HEVC_ENCRYPTION
    if(s->tile_table_encry[s->HEVClc->tile_id]  && (s->encrypt_params & HEVC_CRYPTO_INTRA_PRED_MODE)) {
+    for (j = 0; j < size_in_pus; j++)
+            memset(&s->tab_ipm_encry[(y_pu + j) * min_pu_width + x_pu], INTRA_DC, size_in_pus);
+   }
+#endif
+
+#if HEVC_CIPHERING
+   if(s->tile_table_encry[s->HEVClc->tile_id]  && (s->ciphering_params & HEVC_CRYPTO_INTRA_PRED_MODE)) {
     for (j = 0; j < size_in_pus; j++)
             memset(&s->tab_ipm_encry[(y_pu + j) * min_pu_width + x_pu], INTRA_DC, size_in_pus);
    }
@@ -5142,7 +5203,6 @@ static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
 
     int grow_pkt_size = data_buffer_size - avpkt->size;
     if(grow_pkt_size>0){
-        printf("need to allocate %d bytes\n",grow_pkt_size);
         ret = av_grow_packet(avpkt,grow_pkt_size);
         if (ret < 0){
             fprintf(stderr,"error while growing the packet\n");
